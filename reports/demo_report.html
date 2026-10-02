@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DataWise AI Report — Dataset</title>
+<style>
+  :root {
+    --bg-primary: #0b0f19;
+    --bg-card: #111827;
+    --bg-card-hover: #1f2937;
+    --border: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding: 32px 24px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+  }
+  .header h1 { font-size: 26px; font-weight: 700; color: #fff; }
+  .header .meta { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+  .score-badge {
+    background: #1e1b4b;
+    border: 1px solid #f59e0b;
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-align: right;
+  }
+  .score-badge .score-val { font-size: 32px; font-weight: 800; color: #f59e0b; line-height: 1; }
+  .score-badge .score-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .stat-card .label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+  .stat-card .value { font-size: 24px; font-weight: 700; color: #fff; margin-top: 6px; }
+
+  .section {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 28px;
+  }
+  .section h2 { font-size: 18px; margin-bottom: 16px; color: #e0e7ff; display: flex; align-items: center; gap: 8px; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+  th { background: #1f2937; text-align: left; padding: 10px 14px; color: #d1d5db; font-weight: 600; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid #28303f; color: #f3f4f6; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background-color: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-high { background: #7f1d1d; color: #fca5a5; }
+  .badge-med { background: #78350f; color: #fcd34d; }
+  .badge-low { background: #1e3a5f; color: #93c5fd; }
+  .badge-none { background: #064e3b; color: #6ee7b7; }
+
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .tag {
+    background: #1f2937;
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: monospace;
+  }
+
+  .alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 4px solid var(--warning);
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  .model-card {
+    background: #1a2234;
+    border: 1px solid #2e384d;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .model-card h3 { font-size: 15px; color: #a5b4fc; margin-bottom: 6px; }
+  .model-card p { font-size: 13px; color: #d1d5db; margin-bottom: 10px; }
+
+  .print-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .print-btn:hover { background: var(--accent-light); }
+
+  @media print {
+    body { background: white; color: black; padding: 0; }
+    .section, .stat-card, .model-card { background: white; border: 1px solid #ddd; color: black; }
+    .header h1, .stat-card .value, .section h2 { color: black; }
+    th { background: #f3f4f6; color: black; }
+    td { color: black; border-bottom: 1px solid #eee; }
+    .print-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <h1>DataWise AI — Comprehensive Data Intelligence Report</h1>
+      <div class="meta">Dataset: <strong>Dataset</strong> | Generated: September 27, 2026 - 08:40 UTC</div>
+    </div>
+    <div style="display: flex; gap: 16px; align-items: center;">
+      <button class="print-btn" onclick="window.print()">Export / Print to PDF</button>
+      <div class="score-badge">
+        <div class="score-val">65.0</div>
+        <div class="score-lbl">NEEDS_PREPROCESSING</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-4">
+    <div class="stat-card">
+      <div class="label">Dimensions</div>
+      <div class="value">0 × 0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">File Size</div>
+      <div class="value">0.0 KB</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Target Column</div>
+      <div class="value" style="font-size: 18px; text-overflow: ellipsis; overflow: hidden;">Not Set</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">ML Task</div>
+      <div class="value" style="font-size: 18px; text-transform: capitalize;">Not Identified</div>
+    </div>
+  </div>
+
+  <!-- Quality Assessment -->
+  <div class="section">
+    <h2>Data Hygiene & Quality Audit</h2>
+    <p style="color: var(--text-secondary); font-size: 14px;">
+      Duplicates: <strong>0</strong> (0.0%) | 
+      Columns with Missing Values: <strong>12</strong> | 
+      Columns with Outliers: <strong>7</strong>
+    </p>
+
+    <table><thead><tr><th>Column</th><th>Missing Rows</th><th>Missing %</th><th>Severity</th><th>Recommended Strategy</th></tr></thead><tbody>
+    <tr><td><code>customer_id</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>age</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>tenure_months</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>monthly_charges</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>total_charges</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>num_products</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>contract_type</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>payment_method</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>internet_service</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>gender</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>senior_citizen</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr><tr><td><code>churn</code></td><td>0</td><td>0.0%</td><td><span class='badge badge-low'>NONE</span></td><td>none</td></tr>
+    </tbody></table>
+  </div>
+
+  <!-- Feature Engineering & Selection -->
+  <div class="section">
+    <h2>Feature Engineering & Final Selection</h2>
+    <div>
+      <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Engineered Features (0):</div>
+      <div class="tag-cloud">
+        <em>None engineered</em>
+      </div>
+    </div>
+    <div style="margin-top: 16px;">
+      <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Selected Features (12):</div>
+      <div class="tag-cloud">
+        <span class='tag' style='border-color: #6366f1;'>customer_id</span><span class='tag' style='border-color: #6366f1;'>age</span><span class='tag' style='border-color: #6366f1;'>tenure_months</span><span class='tag' style='border-color: #6366f1;'>monthly_charges</span><span class='tag' style='border-color: #6366f1;'>total_charges</span><span class='tag' style='border-color: #6366f1;'>num_products</span><span class='tag' style='border-color: #6366f1;'>contract_type</span><span class='tag' style='border-color: #6366f1;'>payment_method</span><span class='tag' style='border-color: #6366f1;'>internet_service</span><span class='tag' style='border-color: #6366f1;'>gender</span><span class='tag' style='border-color: #6366f1;'>senior_citizen</span><span class='tag' style='border-color: #6366f1;'>churn</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leakage Warnings -->
+  <div class='section'><h2>Target Leakage Warnings</h2><div class='alert-warning'><strong>Column: <code>customer_id</code> (None)</strong>: None</div><div class='alert-warning'><strong>Column: <code>gender</code> (None)</strong>: None</div></div>
+
+  <!-- Recommended Models -->
+  <div class="section">
+    <h2>Recommended Machine Learning Architectures</h2>
+    <div class='model-card'><h3>Gradient Boosting (XGBoost / LightGBM) <span style='font-size:12px; color:var(--text-secondary); font-weight:normal;'>(xgboost.XGBClassifier)</span></h3><p>None</p><div style='font-size: 12px; color: var(--text-secondary);'><strong>Evaluation Metrics:</strong> f1_weighted, roc_auc, log_loss</div></div><div class='model-card'><h3>Random Forest Classifier <span style='font-size:12px; color:var(--text-secondary); font-weight:normal;'>(sklearn.ensemble.RandomForestClassifier)</span></h3><p>None</p><div style='font-size: 12px; color: var(--text-secondary);'><strong>Evaluation Metrics:</strong> accuracy, f1_weighted, roc_auc, precision_recall_auc</div></div><div class='model-card'><h3>Logistic Regression <span style='font-size:12px; color:var(--text-secondary); font-weight:normal;'>(sklearn.linear_model.LogisticRegression)</span></h3><p>None</p><div style='font-size: 12px; color: var(--text-secondary);'><strong>Evaluation Metrics:</strong> accuracy, f1_weighted, roc_auc</div></div>
+  </div>
+
+  <div style="text-align: center; color: var(--text-secondary); font-size: 12px; margin-top: 40px;">
+    Autonomously produced by DataWise AI • Production Ready Machine Learning System
+  </div>
+</div>
+</body>
+</html>

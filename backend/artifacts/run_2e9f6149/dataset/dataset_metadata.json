@@ -1,0 +1,22 @@
+{
+  "project_id": "proj_8c04c17122",
+  "run_id": "run_2e9f6149",
+  "rows": 1000,
+  "columns": 12,
+  "feature_names": [
+    "customer_id",
+    "age",
+    "tenure_months",
+    "monthly_charges",
+    "total_charges",
+    "num_products",
+    "contract_type",
+    "payment_method",
+    "internet_service",
+    "gender",
+    "senior_citizen"
+  ],
+  "target_column": "churn",
+  "detected_task": "Classification",
+  "created_at": "2026-10-02T20:25:34Z"
+}

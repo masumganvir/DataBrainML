@@ -1,0 +1,335 @@
+{
+  "target": "pass_status",
+  "classes": [
+    "Fail",
+    "Pass"
+  ],
+  "features": [
+    "age",
+    "gender",
+    "education_level",
+    "school_type",
+    "family_income",
+    "parent_education",
+    "urban_rural",
+    "previous_exam_score",
+    "previous_gpa",
+    "attendance_percentage",
+    "assignment_completion_rate",
+    "class_participation",
+    "study_hours_per_day",
+    "self_study_hours",
+    "private_tuition",
+    "online_learning_hours",
+    "study_consistency",
+    "study_environment",
+    "study_method",
+    "revision_frequency",
+    "practice_tests_completed",
+    "notes_quality",
+    "sleep_hours",
+    "sleep_quality",
+    "daily_screen_time",
+    "physical_activity_hours",
+    "break_frequency",
+    "stress_level",
+    "motivation_level",
+    "internet_access",
+    "device_availability",
+    "educational_app_usage",
+    "online_course_hours",
+    "exam_difficulty",
+    "exam_preparation_days",
+    "questions_attempted",
+    "time_management_score",
+    "exam_anxiety_level"
+  ],
+  "numeric_features": [
+    "age",
+    "previous_exam_score",
+    "previous_gpa",
+    "attendance_percentage",
+    "assignment_completion_rate",
+    "study_hours_per_day",
+    "self_study_hours",
+    "private_tuition",
+    "online_learning_hours",
+    "practice_tests_completed",
+    "sleep_hours",
+    "daily_screen_time",
+    "physical_activity_hours",
+    "stress_level",
+    "internet_access",
+    "online_course_hours",
+    "exam_preparation_days",
+    "questions_attempted",
+    "time_management_score",
+    "exam_anxiety_level"
+  ],
+  "categorical_features": [
+    "gender",
+    "education_level",
+    "school_type",
+    "family_income",
+    "parent_education",
+    "urban_rural",
+    "class_participation",
+    "study_consistency",
+    "study_environment",
+    "study_method",
+    "revision_frequency",
+    "notes_quality",
+    "sleep_quality",
+    "break_frequency",
+    "motivation_level",
+    "device_availability",
+    "educational_app_usage",
+    "exam_difficulty"
+  ],
+  "categorical_options": {
+    "gender": [
+      "Female",
+      "Male",
+      "Other"
+    ],
+    "education_level": [
+      "High School",
+      "Undergraduate"
+    ],
+    "school_type": [
+      "Public",
+      "Private",
+      "Charter"
+    ],
+    "family_income": [
+      "Middle",
+      "High",
+      "Lower-Middle",
+      "Upper-Middle",
+      "Low"
+    ],
+    "parent_education": [
+      "Master",
+      "High School",
+      "Bachelor",
+      "Associate",
+      "Doctorate"
+    ],
+    "urban_rural": [
+      "Rural",
+      "Suburban",
+      "Urban"
+    ],
+    "class_participation": [
+      "Medium",
+      "Low",
+      "High"
+    ],
+    "study_consistency": [
+      "Medium",
+      "Low",
+      "High"
+    ],
+    "study_environment": [
+      "Moderate",
+      "Quiet",
+      "Noisy"
+    ],
+    "study_method": [
+      "Flashcards",
+      "Summarizing",
+      "Self-Reading",
+      "Practice Tests",
+      "Group Study"
+    ],
+    "revision_frequency": [
+      "Rarely",
+      "Daily",
+      "Weekly"
+    ],
+    "notes_quality": [
+      "Average",
+      "Excellent",
+      "Poor"
+    ],
+    "sleep_quality": [
+      "Excellent",
+      "Poor",
+      "Fair",
+      "Good"
+    ],
+    "break_frequency": [
+      "Frequently",
+      "Rarely",
+      "Occasionally"
+    ],
+    "motivation_level": [
+      "High",
+      "Medium",
+      "Low"
+    ],
+    "device_availability": [
+      "Shared",
+      "Dedicated"
+    ],
+    "educational_app_usage": [
+      "Low",
+      "Moderate",
+      "High"
+    ],
+    "exam_difficulty": [
+      "Medium",
+      "Easy",
+      "Hard"
+    ]
+  },
+  "numeric_summary": {
+    "age": {
+      "min": 14.0,
+      "max": 20.0,
+      "mean": 17.00574,
+      "median": 17.0,
+      "default": 17.0
+    },
+    "previous_exam_score": {
+      "min": 30.0,
+      "max": 100.0,
+      "mean": 69.5310326,
+      "median": 69.53,
+      "default": 69.53
+    },
+    "previous_gpa": {
+      "min": 1.0,
+      "max": 4.0,
+      "mean": 2.780892014706042,
+      "median": 2.78,
+      "default": 2.78
+    },
+    "attendance_percentage": {
+      "min": 46.34,
+      "max": 100.0,
+      "mean": 84.61688196855897,
+      "median": 84.75,
+      "default": 84.75
+    },
+    "assignment_completion_rate": {
+      "min": 20.0,
+      "max": 100.0,
+      "mean": 69.72440519999999,
+      "median": 69.57,
+      "default": 69.57
+    },
+    "study_hours_per_day": {
+      "min": 0.5,
+      "max": 12.0,
+      "mean": 2.9957247999999996,
+      "median": 2.67,
+      "default": 2.67
+    },
+    "self_study_hours": {
+      "min": 0.25,
+      "max": 10.0,
+      "mean": 2.0949698,
+      "median": 1.84,
+      "default": 1.84
+    },
+    "private_tuition": {
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.2998,
+      "median": 0.0,
+      "default": 0.0
+    },
+    "online_learning_hours": {
+      "min": 0.0,
+      "max": 15.0,
+      "mean": 2.0047634999999997,
+      "median": 1.38,
+      "default": 1.38
+    },
+    "practice_tests_completed": {
+      "min": 0.0,
+      "max": 20.0,
+      "mean": 5.50917,
+      "median": 5.0,
+      "default": 5.0
+    },
+    "sleep_hours": {
+      "min": 3.0,
+      "max": 11.0,
+      "mean": 6.995101999999999,
+      "median": 7.0,
+      "default": 7.0
+    },
+    "daily_screen_time": {
+      "min": 1.0,
+      "max": 12.08,
+      "mean": 5.0004954,
+      "median": 4.99,
+      "default": 4.99
+    },
+    "physical_activity_hours": {
+      "min": 0.0,
+      "max": 12.0,
+      "mean": 2.4875791,
+      "median": 1.73,
+      "default": 1.73
+    },
+    "stress_level": {
+      "min": 5.0,
+      "max": 10.0,
+      "mean": 9.37564,
+      "median": 10.0,
+      "default": 10.0
+    },
+    "internet_access": {
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.91876,
+      "median": 1.0,
+      "default": 1.0
+    },
+    "online_course_hours": {
+      "min": 0.0,
+      "max": 20.0,
+      "mean": 2.9994529000000005,
+      "median": 2.08,
+      "default": 2.08
+    },
+    "exam_preparation_days": {
+      "min": 1.0,
+      "max": 30.0,
+      "mean": 15.50144,
+      "median": 16.0,
+      "default": 16.0
+    },
+    "questions_attempted": {
+      "min": 85.0,
+      "max": 100.0,
+      "mean": 92.49215,
+      "median": 92.0,
+      "default": 92.0
+    },
+    "time_management_score": {
+      "min": 17.03,
+      "max": 100.0,
+      "mean": 78.39855100844149,
+      "median": 79.0,
+      "default": 79.0
+    },
+    "exam_anxiety_level": {
+      "min": 1.0,
+      "max": 10.0,
+      "mean": 8.9273726,
+      "median": 9.49,
+      "default": 9.49
+    }
+  },
+  "leakage_excluded": [
+    "student_id",
+    "exam_score",
+    "performance_grade",
+    "performance_level",
+    "questions_correct"
+  ]
+}

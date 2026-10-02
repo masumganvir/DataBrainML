@@ -1,0 +1,50 @@
+{
+  "project_id": "proj_b11e7d6a4b",
+  "run_id": "run_6f8c9fc7",
+  "task_type": "classification",
+  "target": "churn",
+  "selected_model": "Random Forest Classifier",
+  "metrics": {
+    "cv_score": 0.884,
+    "test_score": 0.887,
+    "precision": 0.892,
+    "recall": 0.883,
+    "f1": 0.887,
+    "roc_auc": 0.924
+  },
+  "generalization_health": "Healthy",
+  "training_duration_seconds": 18.4,
+  "preprocessing": [
+    {
+      "column": "age",
+      "method": "Median Imputation",
+      "reason": "Skewed distribution"
+    },
+    {
+      "column": "payment_type",
+      "method": "OneHotEncoder",
+      "reason": "Low cardinality categorical"
+    },
+    {
+      "column": "income",
+      "method": "RobustScaler",
+      "reason": "Resistant to outliers"
+    }
+  ],
+  "features": [
+    "income_per_member",
+    "tenure_months",
+    "support_calls_rate"
+  ],
+  "artifacts": [
+    "project_analysis.ipynb",
+    "final_report.html",
+    "final_report.pdf",
+    "results.json",
+    "SUMMARY.md",
+    "model.pkl",
+    "pipeline.pkl",
+    "model_metadata.json",
+    "project_results.zip"
+  ]
+}

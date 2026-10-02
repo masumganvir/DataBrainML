@@ -1,0 +1,566 @@
+{
+  "project_id": "proj_fab0a99847",
+  "run_id": "run_a600ea62",
+  "task_type": "classification",
+  "target": "exam_preparation_days",
+  "selected_model": "Random Forest Classifier",
+  "metrics": {
+    "cv_score": 0.884,
+    "test_score": 0.887,
+    "precision": 0.892,
+    "recall": 0.883,
+    "f1": 0.887,
+    "roc_auc": 0.924
+  },
+  "generalization_health": "Healthy",
+  "training_duration_seconds": 18.4,
+  "preprocessing": [
+    {
+      "column": "age",
+      "method": "RobustScaler",
+      "reason": "Numeric feature normalization"
+    },
+    {
+      "column": "previous_exam_score",
+      "method": "RobustScaler",
+      "reason": "Numeric feature normalization"
+    },
+    {
+      "column": "previous_gpa",
+      "method": "RobustScaler",
+      "reason": "Numeric feature normalization"
+    },
+    {
+      "column": "student_id",
+      "method": "OneHotEncoder",
+      "reason": "Low cardinality categorical"
+    },
+    {
+      "column": "gender",
+      "method": "OneHotEncoder",
+      "reason": "Low cardinality categorical"
+    }
+  ],
+  "features": [
+    "student_id",
+    "age",
+    "gender",
+    "education_level",
+    "school_type",
+    "family_income",
+    "parent_education",
+    "urban_rural",
+    "previous_exam_score",
+    "previous_gpa"
+  ],
+  "column_schema": [
+    {
+      "name": "student_id",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "STU_000001",
+        "STU_000002",
+        "STU_000003",
+        "STU_000004",
+        "STU_000005",
+        "STU_000006",
+        "STU_000007",
+        "STU_000008",
+        "STU_000009",
+        "STU_000010",
+        "STU_000011",
+        "STU_000012",
+        "STU_000013",
+        "STU_000014",
+        "STU_000015",
+        "STU_000016",
+        "STU_000017",
+        "STU_000018",
+        "STU_000019",
+        "STU_000020"
+      ],
+      "example": "STU_000001"
+    },
+    {
+      "name": "age",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 14.0,
+      "max": 20.0,
+      "mean": 17.0057,
+      "example": 17.0
+    },
+    {
+      "name": "gender",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Female",
+        "Male",
+        "Other"
+      ],
+      "example": "Female"
+    },
+    {
+      "name": "education_level",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "High School",
+        "Undergraduate"
+      ],
+      "example": "High School"
+    },
+    {
+      "name": "school_type",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Public",
+        "Private",
+        "Charter"
+      ],
+      "example": "Public"
+    },
+    {
+      "name": "family_income",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Middle",
+        "High",
+        "Lower-Middle",
+        "Upper-Middle",
+        "Low"
+      ],
+      "example": "Middle"
+    },
+    {
+      "name": "parent_education",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Master",
+        "High School",
+        "Bachelor",
+        "Associate",
+        "Doctorate"
+      ],
+      "example": "Master"
+    },
+    {
+      "name": "urban_rural",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Rural",
+        "Suburban",
+        "Urban"
+      ],
+      "example": "Rural"
+    },
+    {
+      "name": "previous_exam_score",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 30.0,
+      "max": 100.0,
+      "mean": 69.531,
+      "example": 69.53
+    },
+    {
+      "name": "previous_gpa",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 1.0,
+      "max": 4.0,
+      "mean": 2.7809,
+      "example": 2.78
+    },
+    {
+      "name": "attendance_percentage",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 46.34,
+      "max": 100.0,
+      "mean": 84.6169,
+      "example": 84.75
+    },
+    {
+      "name": "assignment_completion_rate",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 20.0,
+      "max": 100.0,
+      "mean": 69.7244,
+      "example": 69.57
+    },
+    {
+      "name": "class_participation",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Medium",
+        "Low",
+        "High"
+      ],
+      "example": "Medium"
+    },
+    {
+      "name": "study_hours_per_day",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.5,
+      "max": 12.0,
+      "mean": 2.9957,
+      "example": 2.67
+    },
+    {
+      "name": "self_study_hours",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.25,
+      "max": 10.0,
+      "mean": 2.095,
+      "example": 1.84
+    },
+    {
+      "name": "private_tuition",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.2998,
+      "example": 0.0
+    },
+    {
+      "name": "online_learning_hours",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.0,
+      "max": 15.0,
+      "mean": 2.0048,
+      "example": 1.38
+    },
+    {
+      "name": "study_consistency",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Medium",
+        "Low",
+        "High"
+      ],
+      "example": "Medium"
+    },
+    {
+      "name": "study_environment",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Moderate",
+        "Quiet",
+        "Noisy"
+      ],
+      "example": "Moderate"
+    },
+    {
+      "name": "study_method",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Flashcards",
+        "Summarizing",
+        "Self-Reading",
+        "Practice Tests",
+        "Group Study"
+      ],
+      "example": "Flashcards"
+    },
+    {
+      "name": "revision_frequency",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Rarely",
+        "Daily",
+        "Weekly"
+      ],
+      "example": "Rarely"
+    },
+    {
+      "name": "practice_tests_completed",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.0,
+      "max": 20.0,
+      "mean": 5.5092,
+      "example": 5.0
+    },
+    {
+      "name": "notes_quality",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Average",
+        "Excellent",
+        "Poor"
+      ],
+      "example": "Average"
+    },
+    {
+      "name": "sleep_hours",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 3.0,
+      "max": 11.0,
+      "mean": 6.9951,
+      "example": 7.0
+    },
+    {
+      "name": "sleep_quality",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Excellent",
+        "Poor",
+        "Fair",
+        "Good"
+      ],
+      "example": "Excellent"
+    },
+    {
+      "name": "daily_screen_time",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 1.0,
+      "max": 12.08,
+      "mean": 5.0005,
+      "example": 4.99
+    },
+    {
+      "name": "physical_activity_hours",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.0,
+      "max": 12.0,
+      "mean": 2.4876,
+      "example": 1.73
+    },
+    {
+      "name": "break_frequency",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Frequently",
+        "Rarely",
+        "Occasionally"
+      ],
+      "example": "Frequently"
+    },
+    {
+      "name": "stress_level",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 5.0,
+      "max": 10.0,
+      "mean": 9.3756,
+      "example": 10.0
+    },
+    {
+      "name": "motivation_level",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "High",
+        "Medium",
+        "Low"
+      ],
+      "example": "High"
+    },
+    {
+      "name": "internet_access",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.9188,
+      "example": 1.0
+    },
+    {
+      "name": "device_availability",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Shared",
+        "Dedicated"
+      ],
+      "example": "Shared"
+    },
+    {
+      "name": "educational_app_usage",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Low",
+        "Moderate",
+        "High"
+      ],
+      "example": "Low"
+    },
+    {
+      "name": "online_course_hours",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.0,
+      "max": 20.0,
+      "mean": 2.9995,
+      "example": 2.08
+    },
+    {
+      "name": "exam_difficulty",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Medium",
+        "Easy",
+        "Hard"
+      ],
+      "example": "Medium"
+    },
+    {
+      "name": "questions_attempted",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 85.0,
+      "max": 100.0,
+      "mean": 92.4921,
+      "example": 92.0
+    },
+    {
+      "name": "questions_correct",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 57.2982,
+      "example": 57.0
+    },
+    {
+      "name": "time_management_score",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 17.03,
+      "max": 100.0,
+      "mean": 78.3986,
+      "example": 79.0
+    },
+    {
+      "name": "exam_anxiety_level",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 1.0,
+      "max": 10.0,
+      "mean": 8.9274,
+      "example": 9.49
+    },
+    {
+      "name": "exam_score",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 61.9501,
+      "example": 61.96
+    },
+    {
+      "name": "performance_grade",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "A",
+        "B",
+        "D",
+        "C",
+        "F"
+      ],
+      "example": "A"
+    },
+    {
+      "name": "pass_status",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Pass",
+        "Fail"
+      ],
+      "example": "Pass"
+    },
+    {
+      "name": "performance_level",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "High",
+        "Medium",
+        "Low"
+      ],
+      "example": "High"
+    }
+  ],
+  "artifacts": [
+    "project_analysis.ipynb",
+    "final_report.html",
+    "final_report.pdf",
+    "results.json",
+    "SUMMARY.md",
+    "model.pkl",
+    "pipeline.pkl",
+    "model_metadata.json",
+    "project_results.zip"
+  ]
+}

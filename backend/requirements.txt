@@ -1,0 +1,65 @@
+# fastapi and web
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.12
+websockets>=13.0
+httpx>=0.27.0
+aiofiles>=24.1.0
+
+# pydantic and settings
+pydantic>=2.9.0
+pydantic-settings>=2.4.0
+python-dotenv>=1.0.0
+
+# database
+sqlalchemy[asyncio]>=2.0.30
+aiosqlite>=0.20.0
+alembic>=1.13.0
+
+# AI / LangChain / LangGraph (use latest compatible)
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-google-genai>=2.0.0
+langchain-openai>=0.2.0
+langgraph>=0.2.0
+
+# LLM providers (direct SDKs for streaming support)
+google-generativeai>=0.8.0
+openai>=1.51.0
+
+# data science (flexible versions for Python 3.14 compatibility)
+pandas>=2.2.0
+numpy>=2.0.0
+scipy>=1.13.0
+statsmodels>=0.14.0
+openpyxl>=3.1.0
+xlrd>=2.0.1
+
+# machine learning
+scikit-learn>=1.5.0
+imbalanced-learn>=0.12.0
+joblib>=1.4.0
+
+# visualization
+matplotlib>=3.9.0
+seaborn>=0.13.0
+plotly>=5.22.0
+
+# reports
+jinja2>=3.1.0
+reportlab>=4.2.0
+markdown>=3.7
+
+# security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# testing
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+pytest-cov>=6.0.0
+
+# utilities
+tenacity>=9.0.0
+rich>=13.9.0
+loguru>=0.7.2

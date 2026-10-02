@@ -1,0 +1,12 @@
+{
+  "session_id": "test_subgraph_deploy",
+  "model_name": "RandomForest",
+  "feature_columns": [
+    "feature_1",
+    "feature_2"
+  ],
+  "target_column": null,
+  "task_type": "classification",
+  "cv_metric_score": 0.88,
+  "serialization_format": "joblib"
+}

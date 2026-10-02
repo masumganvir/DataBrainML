@@ -1,0 +1,77 @@
+{
+  "project_name": "Student Exam Performance Pass/Fail Predictor",
+  "champion_algorithm": "HistGradientBoosting",
+  "metrics": {
+    "accuracy": 0.8542,
+    "precision": 0.8829,
+    "recall": 0.9358,
+    "f1_score": 0.9086,
+    "roc_auc": 0.9012
+  },
+  "all_candidate_metrics": {
+    "HistGradientBoosting": {
+      "accuracy": 0.8542,
+      "precision": 0.8829,
+      "recall": 0.9358,
+      "f1_score": 0.9086,
+      "roc_auc": 0.9012
+    },
+    "RandomForest": {
+      "accuracy": 0.8351,
+      "precision": 0.841,
+      "recall": 0.9705,
+      "f1_score": 0.9011,
+      "roc_auc": 0.8864
+    },
+    "LogisticRegression": {
+      "accuracy": 0.8474,
+      "precision": 0.8758,
+      "recall": 0.9355,
+      "f1_score": 0.9047,
+      "roc_auc": 0.8922
+    }
+  },
+  "confusion_matrix": [
+    [
+      2601,
+      1921
+    ],
+    [
+      994,
+      14484
+    ]
+  ],
+  "classification_report": {
+    "Fail": {
+      "precision": 0.7235048678720445,
+      "recall": 0.575187969924812,
+      "f1-score": 0.6408771713687323,
+      "support": 4522.0
+    },
+    "Pass": {
+      "precision": 0.8829015544041451,
+      "recall": 0.9357798165137615,
+      "f1-score": 0.9085719662516074,
+      "support": 15478.0
+    },
+    "accuracy": 0.85425,
+    "macro avg": {
+      "precision": 0.8032032111380948,
+      "recall": 0.7554838932192868,
+      "f1-score": 0.7747245688101698,
+      "support": 20000.0
+    },
+    "weighted avg": {
+      "precision": 0.846861963579237,
+      "recall": 0.85425,
+      "f1-score": 0.8480461731285893,
+      "support": 20000.0
+    }
+  },
+  "dataset_shape": [
+    100000,
+    44
+  ],
+  "train_samples": 80000,
+  "test_samples": 20000
+}

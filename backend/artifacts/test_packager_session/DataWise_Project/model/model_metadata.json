@@ -1,0 +1,41 @@
+{
+  "project_name": "DataWise AI Production Model",
+  "session_id": "test_packager_session",
+  "version": "1.0.0",
+  "created_at": "2026-09-30T12:52:57.141987+00:00",
+  "task_type": "classification",
+  "target_column": "is_fraud",
+  "selected_model_architecture": "Random Forest",
+  "feature_schema": {
+    "numerical_features": [
+      "transaction_amount",
+      "customer_age"
+    ],
+    "categorical_features": [],
+    "total_features": 2
+  },
+  "preprocessing": {
+    "numerical_imputer": "SimpleImputer(strategy='median')",
+    "numerical_scaler": "StandardScaler()",
+    "categorical_imputer": "SimpleImputer(strategy='most_frequent')",
+    "categorical_encoder": "OneHotEncoder(handle_unknown='ignore')"
+  },
+  "evaluation": {
+    "cv_scores": [
+      0.9,
+      0.92
+    ],
+    "cv_mean": 0.91,
+    "cv_std": 0.01,
+    "test_metrics": {
+      "PR-AUC": 0.91
+    }
+  },
+  "dataset_sha256": "N/A",
+  "system_environment": {
+    "python_version": "3.14.6",
+    "os": "Windows",
+    "scikit_learn_version": "joblib"
+  },
+  "random_seed": 42
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "test_id": "QA-API-001",
+    "category": "API Robustness",
+    "description": "Health and readiness probe responses and credential confidentiality",
+    "expected_result": "200 OK without secret leakage",
+    "actual_result": "Status 200, live: 200, ready: 200",
+    "status": "PASS",
+    "severity": "INFO",
+    "evidence": "Payload keys: ['status', 'service', 'version', 'environment']",
+    "timestamp": "2026-09-30T12:45:22.656701+00:00"
+  },
+  {
+    "test_id": "QA-API-002",
+    "category": "API Robustness",
+    "description": "Nonexistent resource request error handling",
+    "expected_result": "HTTP 404 Not Found",
+    "actual_result": "HTTP 404",
+    "status": "PASS",
+    "severity": "LOW",
+    "evidence": "{'detail': \"Session 'nonexistent-uuid-99999' not found.\"}",
+    "timestamp": "2026-09-30T12:45:22.824316+00:00"
+  },
+  {
+    "test_id": "QA-API-003",
+    "category": "API Robustness",
+    "description": "Malformed JSON input validation",
+    "expected_result": "HTTP 400 or 422 client error",
+    "actual_result": "HTTP 422",
+    "status": "PASS",
+    "severity": "LOW",
+    "evidence": "Handled gracefully with status 422",
+    "timestamp": "2026-09-30T12:45:22.929294+00:00"
+  },
+  {
+    "test_id": "QA-SEC-IDOR-001",
+    "category": "IDOR & Multi-Tenancy",
+    "description": "Cross-tenant resource substitution prevention",
+    "expected_result": "User B in org_beta must be denied access to org_alpha dataset",
+    "actual_result": "User A access granted; User B access strictly DENIED",
+    "status": "PASS",
+    "severity": "CRITICAL",
+    "evidence": "Resource org: org_alpha, User B org: org_beta -> Rejected",
+    "timestamp": "2026-09-30T12:45:23.366785+00:00"
+  },
+  {
+    "test_id": "QA-ML-ARTIFACT-001",
+    "category": "Model Artifact & Trust",
+    "description": "Artifact save/load/predict verification with signature matching",
+    "expected_result": "Loaded model produces identical predictions with zero degradation",
+    "actual_result": "Predictions match exactly across save/load boundary",
+    "status": "PASS",
+    "severity": "HIGH",
+    "evidence": "Original pred: [1, 0, 0, 1, 0] == Loaded pred: [1, 0, 0, 1, 0]",
+    "timestamp": "2026-09-30T12:45:23.705117+00:00"
+  }
+]

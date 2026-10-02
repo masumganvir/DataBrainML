@@ -1,0 +1,28 @@
+{
+  "reproducibility_version": "1.0.0",
+  "random_seed": 42,
+  "dataset": {
+    "source_path": "C:\\Users\\Chokha\\Desktop\\DATAPREPAGENT\\data\\test_datasets\\clean_dataset.csv",
+    "sha256_hash": "56deb240ca67bdd9799fbb035794a0bfb52f4385e8eb97851c55bf83af49ddb5",
+    "size_bytes": 74634
+  },
+  "environment": {
+    "python_version": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "os_name": "nt",
+    "packages": {
+      "scikit-learn": "1.9.1",
+      "pandas": "3.0.6",
+      "numpy": "2.5.3",
+      "joblib": "1.6.0"
+    }
+  },
+  "model_spec": {
+    "champion_model": "Random Forest",
+    "hyperparameters": {
+      "max_depth": "10",
+      "n_estimators": "50"
+    },
+    "preprocessing": {}
+  }
+}

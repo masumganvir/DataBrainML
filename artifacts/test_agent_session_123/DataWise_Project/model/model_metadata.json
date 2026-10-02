@@ -1,0 +1,50 @@
+{
+  "project_name": "DataWise AI Production Model",
+  "session_id": "test_agent_session_123",
+  "version": "1.0.0",
+  "created_at": "2026-09-30T08:44:52.292514+00:00",
+  "task_type": "binary_classification",
+  "target_column": "churn",
+  "selected_model_architecture": "ElasticNet",
+  "feature_schema": {
+    "numerical_features": [
+      "customer_id",
+      "age",
+      "income"
+    ],
+    "categorical_features": [
+      "category"
+    ],
+    "total_features": 4
+  },
+  "preprocessing": {
+    "numerical_imputer": "SimpleImputer(strategy='median')",
+    "numerical_scaler": "StandardScaler()",
+    "categorical_imputer": "SimpleImputer(strategy='most_frequent')",
+    "categorical_encoder": "OneHotEncoder(handle_unknown='ignore')"
+  },
+  "evaluation": {
+    "cv_scores": [
+      0.5258,
+      0.5246,
+      0.4545,
+      0.4232,
+      0.4218
+    ],
+    "cv_mean": 0.47,
+    "cv_std": 0.0466,
+    "test_metrics": {
+      "RMSE": 0.6289,
+      "MAE": 0.6288,
+      "R2": 0.0,
+      "MAPE": 0.6288
+    }
+  },
+  "dataset_sha256": "943a362d6c9e5bcb4f9928372e94095c0f75c5c75f93f64bde04a6928fc73214",
+  "system_environment": {
+    "python_version": "3.14.6",
+    "os": "Windows",
+    "scikit_learn_version": "joblib"
+  },
+  "random_seed": 42
+}

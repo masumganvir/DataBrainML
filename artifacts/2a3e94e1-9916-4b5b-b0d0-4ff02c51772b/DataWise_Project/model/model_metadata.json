@@ -1,0 +1,46 @@
+{
+  "project_name": "DataWise AI Production Model",
+  "session_id": "2a3e94e1-9916-4b5b-b0d0-4ff02c51772b",
+  "version": "1.0.0",
+  "created_at": "2026-09-29T15:20:04.807304+00:00",
+  "task_type": "classification",
+  "target_column": "is_churn",
+  "selected_model_architecture": "Logistic Regression",
+  "feature_schema": {
+    "numerical_features": [],
+    "categorical_features": [],
+    "total_features": 0
+  },
+  "preprocessing": {
+    "numerical_imputer": "SimpleImputer(strategy='median')",
+    "numerical_scaler": "StandardScaler()",
+    "categorical_imputer": "SimpleImputer(strategy='most_frequent')",
+    "categorical_encoder": "OneHotEncoder(handle_unknown='ignore')"
+  },
+  "evaluation": {
+    "cv_scores": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "cv_mean": 1.0,
+    "cv_std": 0.0,
+    "test_metrics": {
+      "Accuracy": 0.6667,
+      "Balanced Accuracy": 0.75,
+      "F1": 0.6667,
+      "Precision": 0.8333,
+      "Recall": 0.6667,
+      "ROC-AUC": 1.0,
+      "PR-AUC": 1.0
+    }
+  },
+  "dataset_sha256": "9d8fda9885df88058b952d8fe997bd74d7bab343ecba805ec2b565b887625883",
+  "system_environment": {
+    "python_version": "3.14.6",
+    "os": "Windows",
+    "scikit_learn_version": "joblib"
+  },
+  "random_seed": 42
+}

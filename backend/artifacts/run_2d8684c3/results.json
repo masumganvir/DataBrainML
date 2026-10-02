@@ -1,0 +1,206 @@
+{
+  "project_id": "proj_abb7f3307a",
+  "run_id": "run_2d8684c3",
+  "task_type": "classification",
+  "target": "churn",
+  "selected_model": "Random Forest Classifier",
+  "metrics": {
+    "cv_score": 0.884,
+    "test_score": 0.887,
+    "precision": 0.892,
+    "recall": 0.883,
+    "f1": 0.887,
+    "roc_auc": 0.924
+  },
+  "generalization_health": "Healthy",
+  "training_duration_seconds": 18.4,
+  "preprocessing": [
+    {
+      "column": "age",
+      "method": "RobustScaler",
+      "reason": "Numeric feature normalization"
+    },
+    {
+      "column": "tenure_months",
+      "method": "RobustScaler",
+      "reason": "Numeric feature normalization"
+    },
+    {
+      "column": "monthly_charges",
+      "method": "RobustScaler",
+      "reason": "Numeric feature normalization"
+    },
+    {
+      "column": "customer_id",
+      "method": "OneHotEncoder",
+      "reason": "Low cardinality categorical"
+    },
+    {
+      "column": "contract_type",
+      "method": "OneHotEncoder",
+      "reason": "Low cardinality categorical"
+    }
+  ],
+  "features": [
+    "customer_id",
+    "age",
+    "tenure_months",
+    "monthly_charges",
+    "total_charges",
+    "num_products",
+    "contract_type",
+    "payment_method",
+    "internet_service",
+    "gender"
+  ],
+  "column_schema": [
+    {
+      "name": "customer_id",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "CUST00000",
+        "CUST00001",
+        "CUST00002",
+        "CUST00003",
+        "CUST00004",
+        "CUST00005",
+        "CUST00006",
+        "CUST00007",
+        "CUST00008",
+        "CUST00009",
+        "CUST00010",
+        "CUST00011",
+        "CUST00012",
+        "CUST00013",
+        "CUST00014",
+        "CUST00015",
+        "CUST00016",
+        "CUST00017",
+        "CUST00018",
+        "CUST00019"
+      ],
+      "example": "CUST00000"
+    },
+    {
+      "name": "age",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 18.0,
+      "max": 79.0,
+      "mean": 49.857,
+      "example": 50.0
+    },
+    {
+      "name": "tenure_months",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 1.0,
+      "max": 119.0,
+      "mean": 59.6,
+      "example": 59.0
+    },
+    {
+      "name": "monthly_charges",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 20.02,
+      "max": 119.63,
+      "mean": 69.4239,
+      "example": 70.345
+    },
+    {
+      "name": "total_charges",
+      "dtype": "float64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 101.49,
+      "max": 7997.74,
+      "mean": 4097.8103,
+      "example": 4197.335
+    },
+    {
+      "name": "num_products",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 1.0,
+      "max": 4.0,
+      "mean": 2.515,
+      "example": 3.0
+    },
+    {
+      "name": "contract_type",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "One year",
+        "Month-to-month",
+        "Two year"
+      ],
+      "example": "One year"
+    },
+    {
+      "name": "payment_method",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Bank transfer",
+        "Mailed check",
+        "Electronic check",
+        "Credit card"
+      ],
+      "example": "Bank transfer"
+    },
+    {
+      "name": "internet_service",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "No",
+        "Fiber optic",
+        "DSL"
+      ],
+      "example": "No"
+    },
+    {
+      "name": "gender",
+      "dtype": "str",
+      "is_numeric": false,
+      "is_categorical": true,
+      "unique_values": [
+        "Female",
+        "Male"
+      ],
+      "example": "Female"
+    },
+    {
+      "name": "senior_citizen",
+      "dtype": "int64",
+      "is_numeric": true,
+      "is_categorical": false,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.148,
+      "example": 0.0
+    }
+  ],
+  "artifacts": [
+    "project_analysis.ipynb",
+    "final_report.html",
+    "final_report.pdf",
+    "results.json",
+    "SUMMARY.md",
+    "model.pkl",
+    "pipeline.pkl",
+    "model_metadata.json",
+    "project_results.zip"
+  ]
+}

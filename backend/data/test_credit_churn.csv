@@ -1,0 +1,31 @@
+customer_id,age,tenure,monthly_charges,total_charges,contract_type,payment_method,is_churn
+1001,34,12,65.5,786.0,Month-to-month,Electronic check,0
+1002,45,24,89.2,2140.8,One year,Mailed check,0
+1003,29,3,70.1,210.3,Month-to-month,Electronic check,1
+1004,52,48,105.4,5059.2,Two year,Bank transfer,0
+1005,63,6,45.2,271.2,Month-to-month,Credit card,1
+1006,31,18,55.0,990.0,Month-to-month,Electronic check,0
+1007,41,36,95.8,3448.8,One year,Bank transfer,0
+1008,22,2,80.5,161.0,Month-to-month,Electronic check,1
+1009,58,60,110.0,6600.0,Two year,Credit card,0
+1010,38,9,60.2,541.8,Month-to-month,Mailed check,0
+1011,49,15,75.0,1125.0,Month-to-month,Electronic check,1
+1012,27,5,40.0,200.0,Month-to-month,Mailed check,0
+1013,55,42,99.9,4195.8,Two year,Bank transfer,0
+1014,33,8,85.0,680.0,Month-to-month,Electronic check,1
+1015,48,22,68.4,1504.8,One year,Credit card,0
+1016,61,50,115.5,5775.0,Two year,Bank transfer,0
+1017,26,1,72.0,72.0,Month-to-month,Electronic check,1
+1018,44,30,88.0,2640.0,One year,Credit card,0
+1019,39,11,58.5,643.5,Month-to-month,Mailed check,0
+1020,50,26,92.0,2392.0,One year,Electronic check,0
+1021,24,4,62.0,248.0,Month-to-month,Electronic check,1
+1022,57,55,108.0,5940.0,Two year,Bank transfer,0
+1023,35,14,79.5,1113.0,Month-to-month,Credit card,0
+1024,42,20,83.0,1660.0,One year,Mailed check,0
+1025,28,7,66.0,462.0,Month-to-month,Electronic check,1
+1026,65,45,100.0,4500.0,Two year,Credit card,0
+1027,32,16,71.0,1136.0,Month-to-month,Bank transfer,0
+1028,47,38,96.0,3648.0,One year,Electronic check,0
+1029,21,3,48.0,144.0,Month-to-month,Mailed check,1
+1030,59,62,118.0,7316.0,Two year,Credit card,0

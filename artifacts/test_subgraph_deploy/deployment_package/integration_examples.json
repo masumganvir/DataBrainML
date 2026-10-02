@@ -1,0 +1,5 @@
+{
+  "python": "import requests\n\nurl = \"http://localhost:8000/predict\"\npayload = {'feature_1': 1.0, 'feature_2': 1.0}\nresponse = requests.post(url, json=payload)\nprint(response.json())\n",
+  "curl": "curl -X POST \"http://localhost:8000/predict\" \\\n     -H \"Content-Type: application/json\" \\\n     -d '{\"feature_1\": 1.0, \"feature_2\": 1.0}'\n",
+  "javascript": "async function getPrediction() {\n  const response = await fetch(\"http://localhost:8000/predict\", {\n    method: \"POST\",\n    headers: { \"Content-Type\": \"application/json\" },\n    body: JSON.stringify({\"feature_1\": 1.0, \"feature_2\": 1.0})\n  });\n  const result = await response.json();\n  console.log(\"Prediction:\", result);\n}\ngetPrediction();\n"
+}

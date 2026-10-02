@@ -1,0 +1,21 @@
+[package]
+name = "datalab-desktop"
+version = "2.4.0"
+description = "AI DataLab Desktop Shell"
+authors = ["AI DataLab Team"]
+license = "MIT"
+repository = "https://github.com/datalab-ai/datalab"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+tauri = { version = "1.5", features = ["shell-open", "dialog-all", "http-request", "notification"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[features]
+# By default, desktop application uses secure isolated sandboxing
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

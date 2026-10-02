@@ -1,0 +1,14 @@
+{
+  "session_id": "test_session_e2e_123",
+  "model_name": "LogisticRegression",
+  "feature_columns": [
+    "age",
+    "monthly_charges",
+    "total_charges",
+    "num_products"
+  ],
+  "target_column": "churn",
+  "task_type": "classification",
+  "cv_metric_score": 0.88,
+  "serialization_format": "joblib"
+}

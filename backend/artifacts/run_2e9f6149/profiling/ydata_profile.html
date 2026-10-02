@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset Profile - E2E Churn Test Workbench</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 32px 40px;
+        }
+        .header {
+            border-bottom: 1px solid var(--surface-border);
+            padding-bottom: 24px;
+            margin-bottom: 32px;
+        }
+        .header h1 { margin: 0 0 8px 0; font-size: 26px; }
+        .header p { margin: 0; color: var(--text-muted); font-size: 14px; }
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+        .overview-box {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .overview-box .num { font-size: 24px; font-weight: 700; color: var(--primary); }
+        .overview-box .lbl { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+        .section-title { font-size: 20px; font-weight: 600; margin: 32px 0 16px 0; }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .card-header h3 { margin: 0; font-size: 16px; }
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .badge-num { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .badge-cat { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .stats-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+        .stat-pill { background: rgba(255,255,255,0.04); padding: 6px 12px; border-radius: 6px; font-size: 12px; }
+        .stat-pill .label { color: var(--text-muted); margin-right: 6px; }
+        .stat-pill .value { font-weight: 600; }
+        .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--surface-border); }
+        th { background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 600; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Dataset Profile - E2E Churn Test Workbench</h1>
+        <p>Comprehensive Statistical Profile & Schema Verification</p>
+    </div>
+
+    <div class="overview-grid">
+        <div class="overview-box">
+            <div class="num">1,000</div>
+            <div class="lbl">Total Observations</div>
+        </div>
+        <div class="overview-box">
+            <div class="num">12</div>
+            <div class="lbl">Feature Columns</div>
+        </div>
+        <div class="overview-box">
+            <div class="num">0 (0.0%)</div>
+            <div class="lbl">Missing Cells</div>
+        </div>
+        <div class="overview-box">
+            <div class="num">0</div>
+            <div class="lbl">Duplicate Rows</div>
+        </div>
+        <div class="overview-box">
+            <div class="num">93.9 KB</div>
+            <div class="lbl">Memory Footprint</div>
+        </div>
+    </div>
+
+    <div class="section-title">Variable Profiling</div>
+    
+        <div class="card">
+            <div class="card-header">
+                <h3>customer_id</h3>
+                <span class="badge badge-cat">Categorical</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">1000</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">str</span></div>
+        
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>age</h3>
+                <span class="badge badge-num">Numeric</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">62</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">int64</span></div>
+        
+            <div class="stat-pill"><span class="label">Mean</span><span class="value">49.857</span></div>
+            <div class="stat-pill"><span class="label">Min</span><span class="value">18.0</span></div>
+            <div class="stat-pill"><span class="label">Max</span><span class="value">79.0</span></div>
+            
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>tenure_months</h3>
+                <span class="badge badge-num">Numeric</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">119</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">int64</span></div>
+        
+            <div class="stat-pill"><span class="label">Mean</span><span class="value">59.6</span></div>
+            <div class="stat-pill"><span class="label">Min</span><span class="value">1.0</span></div>
+            <div class="stat-pill"><span class="label">Max</span><span class="value">119.0</span></div>
+            
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>monthly_charges</h3>
+                <span class="badge badge-num">Numeric</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">955</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">float64</span></div>
+        
+            <div class="stat-pill"><span class="label">Mean</span><span class="value">69.424</span></div>
+            <div class="stat-pill"><span class="label">Min</span><span class="value">20.02</span></div>
+            <div class="stat-pill"><span class="label">Max</span><span class="value">119.63</span></div>
+            
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>total_charges</h3>
+                <span class="badge badge-num">Numeric</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">1000</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">float64</span></div>
+        
+            <div class="stat-pill"><span class="label">Mean</span><span class="value">4097.81</span></div>
+            <div class="stat-pill"><span class="label">Min</span><span class="value">101.49</span></div>
+            <div class="stat-pill"><span class="label">Max</span><span class="value">7997.74</span></div>
+            
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>num_products</h3>
+                <span class="badge badge-num">Numeric</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">4</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">int64</span></div>
+        
+            <div class="stat-pill"><span class="label">Mean</span><span class="value">2.515</span></div>
+            <div class="stat-pill"><span class="label">Min</span><span class="value">1.0</span></div>
+            <div class="stat-pill"><span class="label">Max</span><span class="value">4.0</span></div>
+            
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>contract_type</h3>
+                <span class="badge badge-cat">Categorical</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">3</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">str</span></div>
+        
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>payment_method</h3>
+                <span class="badge badge-cat">Categorical</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">4</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">str</span></div>
+        
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>internet_service</h3>
+                <span class="badge badge-cat">Categorical</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">3</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">str</span></div>
+        
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>gender</h3>
+                <span class="badge badge-cat">Categorical</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">2</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">str</span></div>
+        
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>senior_citizen</h3>
+                <span class="badge badge-num">Numeric</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">2</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">int64</span></div>
+        
+            <div class="stat-pill"><span class="label">Mean</span><span class="value">0.148</span></div>
+            <div class="stat-pill"><span class="label">Min</span><span class="value">0.0</span></div>
+            <div class="stat-pill"><span class="label">Max</span><span class="value">1.0</span></div>
+            
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>churn</h3>
+                <span class="badge badge-num">Numeric</span>
+            </div>
+            <div class="stats-grid">
+                
+        <div class="stat-pill"><span class="label">Distinct</span><span class="value">2</span></div>
+        <div class="stat-pill"><span class="label">Missing</span><span class="value">0 (0.0%)</span></div>
+        <div class="stat-pill"><span class="label">Type</span><span class="value">int64</span></div>
+        
+            <div class="stat-pill"><span class="label">Mean</span><span class="value">0.29</span></div>
+            <div class="stat-pill"><span class="label">Min</span><span class="value">0.0</span></div>
+            <div class="stat-pill"><span class="label">Max</span><span class="value">1.0</span></div>
+            
+            </div>
+        </div>
+        
+
+    <div class="section-title">Sample Records (First 5 Rows)</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>customer_id</th><th>age</th><th>tenure_months</th><th>monthly_charges</th><th>total_charges</th><th>num_products</th><th>contract_type</th><th>payment_method</th><th>internet_service</th><th>gender</th><th>senior_citizen</th><th>churn</th></tr></thead>
+            <tbody><tr><td>CUST00000</td><td>56</td><td>11</td><td>20.02</td><td>1886.56</td><td>3</td><td>One year</td><td>Bank transfer</td><td>No</td><td>Female</td><td>0</td><td>0</td></tr><tr><td>CUST00001</td><td>69</td><td>85</td><td>38.55</td><td>6790.66</td><td>2</td><td>One year</td><td>Bank transfer</td><td>Fiber optic</td><td>Male</td><td>0</td><td>0</td></tr><tr><td>CUST00002</td><td>46</td><td>26</td><td>58.4</td><td>3486.18</td><td>2</td><td>Month-to-month</td><td>Mailed check</td><td>DSL</td><td>Female</td><td>0</td><td>0</td></tr><tr><td>CUST00003</td><td>32</td><td>63</td><td>113.26</td><td>1213.58</td><td>1</td><td>One year</td><td>Electronic check</td><td>Fiber optic</td><td>Female</td><td>0</td><td>1</td></tr><tr><td>CUST00004</td><td>60</td><td>89</td><td>27.0</td><td>5347.08</td><td>3</td><td>One year</td><td>Electronic check</td><td>No</td><td>Female</td><td>0</td><td>0</td></tr></tbody>
+        </table>
+    </div>
+</body>
+</html>

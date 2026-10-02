@@ -1,0 +1,144 @@
+<USER_REQUEST>
+PROJECT: DATAWISE AI — Autonomous Data Analysis, Visualization & ML Preparation Agent
+1. PROJECT OBJECTIVE
+
+Build a production-quality Python-based Agentic AI application called:
+
+DataWise AI — Autonomous Data Science & ML Preparation Agent
+
+The application must provide a ChatGPT-like interactive interface where a user can upload a dataset and communicate with an AI data science agent.
+
+The agent must autonomously inspect, analyze, visualize, preprocess, transform, select features, evaluate ML-readiness, recommend suitable machine learning approaches, construct preprocessing pipelines, and generate a complete machine-learning project roadmap.
+
+The system must NOT blindly modify the user's original dataset.
+
+Every destructive or potentially ambiguous operation must be proposed to the user first and require confirmation when appropriate.
+
+The application should behave like an AI Data Scientist assistant.
+
+2. CORE USER EXPERIENCE
+
+The user should be able to:
+
+Open the application.
+Upload a CSV, XLSX, XLS, or JSON dataset.
+See dataset information.
+Chat with the AI agent.
+Ask questions about the dataset.
+Allow the agent to automatically analyze the dataset.
+Review generated visualizations.
+Review detected data-quality problems.
+Approve/reject preprocessing recommendations.
+Choose the target column for supervised learning.
+Select preprocessing strategies.
+Generate a reusable sklearn Pipeline / ColumnTransformer.
+Receive feature-engineering recommendations.
+Receive feature-selection results.
+Receive ML algorithm recommendations.
+Receive a complete ML project roadmap.
+Download processed data, plots, reports, and generated Python code.
+
+The interface should feel like a combination of:
+
+ChatGPT
+Jupyter Notebook
+automated EDA tool
+AI data scientist
+ML preprocessing assistant
+3. IMPORTANT ARCHITECTURAL PRINCIPLE
+
+DO NOT allow the LLM to directly perform numerical analysis.
+
+Use deterministic Python tools for calculations.
+
+Architecture:
+
+USER
+↓
+LLM AGENT
+↓
+TOOL SELECTION
+↓
+PYTHON DATA SCIENCE TOOLS
+
+<truncated 20999 bytes>
+6. IMPORTANT PRODUCT PRINCIPLE
+
+The application should NOT simply say:
+
+"Here is your cleaned dataset."
+
+It should explain:
+
+WHAT was detected
+WHY it matters
+WHAT options exist
+WHAT the agent recommends
+WHAT the user selected
+WHAT transformation was applied
+HOW the transformation affects ML
+WHAT should happen next
+
+The user should learn data science while using the system.
+
+47. FINAL DELIVERABLE
+
+At the end of development the application should provide:
+
+Dataset analysis
+Interactive visualizations
+Missing-value analysis
+Outlier analysis
+Distribution analysis
+Correlation analysis
+Data-quality analysis
+Encoding recommendations
+Scaling recommendations
+Feature transformation
+Feature engineering
+Feature selection
+Target selection
+Leakage detection
+ML readiness score/report
+ColumnTransformer
+sklearn Pipeline
+Model recommendations
+Evaluation strategy
+Complete ML roadmap
+Reproducible Python code
+Downloadable reports
+Interactive chat
+Human-in-the-loop decisions
+48. IMPLEMENTATION RULE
+
+Start with STEP 1 only.
+
+After completing each step:
+
+Run tests.
+Verify functionality.
+Show what was implemented.
+Explain files created/modified.
+Explain how to run it.
+Only then proceed to the next step.
+
+Never skip testing.
+
+Do not generate fake functionality.
+
+If a dependency, API key, model, or external service is required, clearly identify it.
+
+Use environment variables for secrets.
+
+Never hardcode API keys.
+
+The final result must be a real working application, not a mockup.
+
+Build the system with clean architecture so new analysis tools, ML algorithms, visualizations, and agents can be added later without rewriting the core system.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-09-21T00:02:04+05:30.
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from None to Claude Sonnet 4.6 (Thinking). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>

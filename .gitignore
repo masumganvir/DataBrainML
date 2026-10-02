@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Environment (Strict security: NEVER commit secrets or .env files)
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+backend/.env
+frontend/.env
+frontend/.env*
+
+# DataWise runtime data (never commit)
+data/uploads/*
+!data/uploads/.gitkeep
+artifacts/plots/*
+!artifacts/plots/.gitkeep
+artifacts/reports/*
+!artifacts/reports/.gitkeep
+artifacts/code/*
+!artifacts/code/.gitkeep
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Generated test datasets (large binaries, regenerate with script)
+data/test_datasets/*.csv
+data/test_datasets/*.xlsx

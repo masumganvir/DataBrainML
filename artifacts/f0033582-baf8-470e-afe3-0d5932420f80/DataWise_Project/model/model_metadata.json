@@ -1,0 +1,33 @@
+{
+  "project_name": "DataWise AI Production Model",
+  "session_id": "f0033582-baf8-470e-afe3-0d5932420f80",
+  "version": "1.0.0",
+  "created_at": "2026-09-27T09:21:02.328374+00:00",
+  "task_type": "classification",
+  "target_column": "is_churn",
+  "selected_model_architecture": "Selected Model",
+  "feature_schema": {
+    "numerical_features": [],
+    "categorical_features": [],
+    "total_features": 0
+  },
+  "preprocessing": {
+    "numerical_imputer": "SimpleImputer(strategy='median')",
+    "numerical_scaler": "StandardScaler()",
+    "categorical_imputer": "SimpleImputer(strategy='most_frequent')",
+    "categorical_encoder": "OneHotEncoder(handle_unknown='ignore')"
+  },
+  "evaluation": {
+    "cv_scores": [],
+    "cv_mean": 0.0,
+    "cv_std": 0.0,
+    "test_metrics": {}
+  },
+  "dataset_sha256": "9d8fda9885df88058b952d8fe997bd74d7bab343ecba805ec2b565b887625883",
+  "system_environment": {
+    "python_version": "3.14.6",
+    "os": "Windows",
+    "scikit_learn_version": "joblib"
+  },
+  "random_seed": 42
+}
