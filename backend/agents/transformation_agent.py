@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pandas as pd
 from agents.base import BaseAgent, AgentInput, AgentOutput
-from app.tools.transformation import FeatureTransformer
+from app.tools.transformation import TransformationRecommender
 
 
 class TransformationAgent(BaseAgent):
@@ -27,8 +27,8 @@ class TransformationAgent(BaseAgent):
             if df is None:
                 return AgentOutput(session_id=self.session_id, agent_name=self.agent_name, status="error", message="Missing dataframe")
 
-            transformer = FeatureTransformer(df)
-            plan = transformer.generate_plan()
+            recommender = TransformationRecommender(df)
+            plan = recommender.recommend_all()
 
             return AgentOutput(
                 session_id=self.session_id,

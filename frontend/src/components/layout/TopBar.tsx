@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { branding } from '../../config/branding'
 import { authStore, DEMO_PROJECTS } from '../../services/authStore'
+import { projectsApi } from '../../services/api'
 import { Project } from '../../types'
 
 interface TopBarProps {
@@ -29,16 +30,30 @@ export default function TopBar({ onOpenCommandPalette }: TopBarProps) {
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [dbProjects, setDbProjects] = useState<any[]>([])
 
   useEffect(() => {
     return authStore.subscribe(() => setStoreState({ ...authStore.getState() }))
   }, [])
 
+  useEffect(() => {
+    projectsApi.list()
+      .then((projs) => {
+        if (projs && projs.length > 0) {
+          setDbProjects(projs)
+        }
+      })
+      .catch(() => {})
+  }, [isProjectDropdownOpen])
+
   const { currentProject, theme, isOnline, user, notificationsCount } = storeState
 
-  const handleSelectProject = (project: Project) => {
+  const handleSelectProject = (project: any) => {
     authStore.setCurrentProject(project)
     setIsProjectDropdownOpen(false)
+    if (project.id) {
+      navigate(`/projects/${project.id}`)
+    }
   }
 
   const toggleTheme = () => {
@@ -142,23 +157,28 @@ export default function TopBar({ onOpenCommandPalette }: TopBarProps) {
               <div style={{ padding: '6px 10px', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                 ACTIVE PROJECTS
               </div>
-              {DEMO_PROJECTS.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => handleSelectProject(p)}
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    background: p.id === currentProject?.id ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-                    color: p.id === currentProject?.id ? 'var(--primary-light)' : 'var(--text-secondary)',
-                    fontWeight: p.id === currentProject?.id ? 600 : 400,
-                  }}
-                >
-                  {p.name}
-                </div>
-              ))}
+              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                {(dbProjects.length > 0 ? dbProjects : DEMO_PROJECTS).slice(0, 15).map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => handleSelectProject(p)}
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      background: p.id === currentProject?.id ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                      color: p.id === currentProject?.id ? 'var(--primary-light)' : 'var(--text-secondary)',
+                      fontWeight: p.id === currentProject?.id ? 600 : 400,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {p.name}
+                  </div>
+                ))}
+              </div>
               <div style={{ borderTop: '1px solid var(--border-subtle)', margin: '6px 0' }} />
               <Link
                 to="/app/projects"

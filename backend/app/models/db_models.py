@@ -46,6 +46,7 @@ from app.db.models.entities import (
     DriftReport,
     AgentRun,
     AgentEvent,
+    PipelineStage,
     UserDecisionRecord,
     AuditLog,
     BackgroundJob,

@@ -5,6 +5,7 @@ import Sidebar from './Sidebar'
 import CommandPalette from '../ui/CommandPalette'
 import ErrorBoundary from '../ui/ErrorBoundary'
 import { authStore } from '../../services/authStore'
+import { projectsApi } from '../../services/api'
 import { ChevronRight, Home } from 'lucide-react'
 
 export function AppShell() {
@@ -17,6 +18,21 @@ export function AppShell() {
       setCurrentProject(authStore.getState().currentProject)
     })
   }, [])
+
+  // Synchronize current project with active route
+  useEffect(() => {
+    const match = location.pathname.match(/\/projects\/([^\/]+)/)
+    if (match && match[1] && match[1] !== 'new') {
+      const routeProjId = match[1]
+      if (currentProject?.id !== routeProjId) {
+        projectsApi.get(routeProjId)
+          .then((p) => {
+            if (p && p.name) authStore.setCurrentProject(p)
+          })
+          .catch(() => {})
+      }
+    }
+  }, [location.pathname, currentProject?.id])
 
   // Global Ctrl+K / Cmd+K shortcut listener
   useEffect(() => {

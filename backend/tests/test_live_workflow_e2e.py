@@ -2,8 +2,66 @@ import json
 import time
 import urllib.request
 import pytest
+from fastapi.testclient import TestClient
+
+def _is_server_online(url: str = "http://127.0.0.1:8000/api/projects") -> bool:
+    try:
+        with urllib.request.urlopen(url, timeout=0.8) as res:
+            return res.status in (200, 404, 422)
+    except Exception:
+        return False
 
 def test_full_agent_workflow():
+    if not _is_server_online():
+        # Fallback to in-process execution via TestClient
+        from main import app
+        with TestClient(app) as client:
+            res = client.post(
+                "/api/projects",
+                json={
+                    "name": "E2E Customer Churn Workbench",
+                    "prompt": "Analyze this customer dataset and predict churn with high recall.",
+                    "configuration": {
+                        "target_column": "churn",
+                        "task_type": "Classification",
+                        "optimization_metric": "F1",
+                        "auto_approve_outliers": True,
+                    },
+                },
+            )
+            assert res.status_code == 201
+            proj = res.json()
+            project_id = proj["id"]
+
+            run_res = client.post(
+                f"/api/projects/{project_id}/runs",
+                json={"prompt": "Analyze customer churn and prioritize recall."},
+            )
+            assert run_res.status_code == 200
+            run_id = run_res.json()["run_id"]
+
+            # Poll for completion
+            for _ in range(40):
+                time.sleep(1.0)
+                st = client.get(f"/api/projects/{project_id}/runs/{run_id}").json()
+                if st.get("status") == "COMPLETED":
+                    break
+
+            results = client.get(f"/api/projects/{project_id}/runs/{run_id}/results").json()
+            assert results.get("best_model") is not None
+
+            for art in ["notebook", "html", "pdf", "json", "summary", "model", "pipeline", "bundle"]:
+                art_res = client.get(f"/api/projects/{project_id}/runs/{run_id}/artifacts/{art}")
+                assert art_res.status_code == 200
+                assert len(art_res.content) > 0
+
+            chat = client.post(
+                f"/api/projects/{project_id}/chat",
+                json={"message": "Why did you use RobustScaler?"},
+            ).json()
+            assert "RobustScaler" in chat["content"]
+        return
+
     base_url = "http://127.0.0.1:8000/api"
 
     # 1. Create Project

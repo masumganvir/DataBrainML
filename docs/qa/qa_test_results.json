@@ -8,7 +8,7 @@
     "status": "PASS",
     "severity": "INFO",
     "evidence": "Payload keys: ['status', 'service', 'version', 'environment']",
-    "timestamp": "2026-09-30T12:52:52.274380+00:00"
+    "timestamp": "2026-10-04T15:19:15.442071+00:00"
   },
   {
     "test_id": "QA-API-002",
@@ -19,7 +19,7 @@
     "status": "PASS",
     "severity": "LOW",
     "evidence": "{'detail': \"Session 'nonexistent-uuid-99999' not found.\"}",
-    "timestamp": "2026-09-30T12:52:52.383947+00:00"
+    "timestamp": "2026-10-04T15:19:15.715840+00:00"
   },
   {
     "test_id": "QA-API-003",
@@ -30,7 +30,7 @@
     "status": "PASS",
     "severity": "LOW",
     "evidence": "Handled gracefully with status 422",
-    "timestamp": "2026-09-30T12:52:52.480416+00:00"
+    "timestamp": "2026-10-04T15:19:15.899545+00:00"
   },
   {
     "test_id": "QA-SEC-AUTH-001",
@@ -40,8 +40,8 @@
     "actual_result": "Verified bcrypt hash, JWT decode, viewer blocked from training",
     "status": "PASS",
     "severity": "HIGH",
-    "evidence": "Viewer permissions: {'dataset.read', 'model.read'}; Admin permissions: {'audit.read', 'dataset.write', 'model.read', 'model.promote', 'deployment.manage', 'model.train', 'experiment.run', 'deployment.create', 'dataset.read'}",
-    "timestamp": "2026-09-30T12:52:52.565867+00:00"
+    "evidence": "Viewer permissions: {'dataset.read', 'model.read'}; Admin permissions: {'deployment.create', 'model.train', 'model.promote', 'experiment.run', 'dataset.read', 'dataset.write', 'audit.read', 'model.read', 'deployment.manage'}",
+    "timestamp": "2026-10-04T15:19:16.242476+00:00"
   },
   {
     "test_id": "QA-SEC-IDOR-001",
@@ -52,7 +52,7 @@
     "status": "PASS",
     "severity": "CRITICAL",
     "evidence": "Resource org: org_alpha, User B org: org_beta -> Rejected",
-    "timestamp": "2026-09-30T12:52:52.568408+00:00"
+    "timestamp": "2026-10-04T15:19:16.252767+00:00"
   },
   {
     "test_id": "QA-SEC-SQLI-001",
@@ -63,7 +63,7 @@
     "status": "PASS",
     "severity": "CRITICAL",
     "evidence": "Sample sanitized: 'name' OR '1'='1.csv' -> 'name_OR_1_1.csv'",
-    "timestamp": "2026-09-30T12:52:52.570527+00:00"
+    "timestamp": "2026-10-04T15:19:16.257771+00:00"
   },
   {
     "test_id": "QA-SEC-XSS-001",
@@ -74,7 +74,7 @@
     "status": "PASS",
     "severity": "HIGH",
     "evidence": "Sanitized test payload '<script>alert('XSS')</script>' -> 'alert('XSS')'",
-    "timestamp": "2026-09-30T12:52:52.573571+00:00"
+    "timestamp": "2026-10-04T15:19:16.267593+00:00"
   },
   {
     "test_id": "QA-SEC-UPLOAD-001",
@@ -85,7 +85,7 @@
     "status": "PASS",
     "severity": "CRITICAL",
     "evidence": "Valid file parsed: safe_data.csv, rows: 2",
-    "timestamp": "2026-09-30T12:52:52.577747+00:00"
+    "timestamp": "2026-10-04T15:19:16.304511+00:00"
   },
   {
     "test_id": "QA-DS-VAL-001",
@@ -96,7 +96,7 @@
     "status": "PASS",
     "severity": "HIGH",
     "evidence": "Datasets profiled: ['categorical.csv', 'classification_balanced.csv', 'classification_imbalanced.csv', 'classification_missing.csv', 'classification_outliers.csv', 'corrupted.csv', 'empty.csv', 'fraud_like.csv', 'high_cardinality.csv', 'mixed_types.csv', 'regression.csv', 'regression_skewed.csv', 'timeseries.csv', 'tiny.csv']",
-    "timestamp": "2026-09-30T12:52:52.677914+00:00"
+    "timestamp": "2026-10-04T15:19:16.543127+00:00"
   },
   {
     "test_id": "QA-DS-OUTLIER-001",
@@ -107,7 +107,7 @@
     "status": "PASS",
     "severity": "CRITICAL",
     "evidence": "Report summary: total outliers=None",
-    "timestamp": "2026-09-30T12:52:52.692758+00:00"
+    "timestamp": "2026-10-04T15:19:16.627206+00:00"
   },
   {
     "test_id": "QA-DS-MISSING-001",
@@ -118,7 +118,7 @@
     "status": "PASS",
     "severity": "MEDIUM",
     "evidence": "Col: feature_1, Strategy: mean, Rationale: Feature 'feature_1' exhibits near-symmetric distribution (sk...",
-    "timestamp": "2026-09-30T12:52:52.700661+00:00"
+    "timestamp": "2026-10-04T15:19:16.643914+00:00"
   },
   {
     "test_id": "QA-ML-LEAKAGE-001",
@@ -129,7 +129,7 @@
     "status": "PASS",
     "severity": "CRITICAL",
     "evidence": "Train mean: [0.00304887 2.01749504], Full data mean: [0.00683799 2.04773918]",
-    "timestamp": "2026-09-30T12:52:52.707374+00:00"
+    "timestamp": "2026-10-04T15:19:16.660939+00:00"
   },
   {
     "test_id": "QA-ML-SEARCH-001",
@@ -140,7 +140,7 @@
     "status": "PASS",
     "severity": "HIGH",
     "evidence": "Candidate models evaluated: ['Logistic Regression', 'Random Forest', 'HistGradientBoosting', 'Decision Tree']",
-    "timestamp": "2026-09-30T12:52:53.286790+00:00"
+    "timestamp": "2026-10-04T15:19:17.670676+00:00"
   },
   {
     "test_id": "QA-ML-ARTIFACT-001",
@@ -150,8 +150,8 @@
     "actual_result": "Predictions match exactly across save/load boundary",
     "status": "PASS",
     "severity": "HIGH",
-    "evidence": "Original pred: [1, 1, 0, 0, 0] == Loaded pred: [1, 1, 0, 0, 0]",
-    "timestamp": "2026-09-30T12:52:53.315791+00:00"
+    "evidence": "Original pred: [0, 0, 1, 1, 0] == Loaded pred: [0, 0, 1, 1, 0]",
+    "timestamp": "2026-10-04T15:19:17.705676+00:00"
   },
   {
     "test_id": "QA-REPORT-001",
@@ -162,7 +162,7 @@
     "status": "PASS",
     "severity": "HIGH",
     "evidence": "Notebook format: v4.5",
-    "timestamp": "2026-09-30T12:52:53.329122+00:00"
+    "timestamp": "2026-10-04T15:19:17.727817+00:00"
   },
   {
     "test_id": "QA-AGENT-LOOP-001",
@@ -173,18 +173,18 @@
     "status": "PASS",
     "severity": "CRITICAL",
     "evidence": "Registered nodes: ['__start__', 'supervisor', 'preprocessing', 'approval_gate', 'training']...",
-    "timestamp": "2026-09-30T12:52:53.340544+00:00"
+    "timestamp": "2026-10-04T15:19:18.922162+00:00"
   },
   {
     "test_id": "QA-RECOVERY-001",
     "category": "Autonomous Recovery",
     "description": "Incident classification, safe user error formatting, and secret masking",
     "expected_result": "Fallback Agent intercepts error, assigns ERR-ID, redacts DB credentials",
-    "actual_result": "Error ERR-84F514C4 generated with sanitized message",
+    "actual_result": "Error ERR-B404D0F5 generated with sanitized message",
     "status": "PASS",
     "severity": "CRITICAL",
     "evidence": "Safe message: 'A security or permission check halted the requested operation.', Hint: 'Workflow halted due to security violation or credential detection.'",
-    "timestamp": "2026-09-30T12:52:53.343594+00:00"
+    "timestamp": "2026-10-04T15:19:18.927579+00:00"
   },
   {
     "test_id": "QA-SEC-INJECT-001",
@@ -195,7 +195,7 @@
     "status": "PASS",
     "severity": "HIGH",
     "evidence": "Sample flagged: ['System prompt leak attempt']",
-    "timestamp": "2026-09-30T12:52:53.347387+00:00"
+    "timestamp": "2026-10-04T15:19:18.933449+00:00"
   },
   {
     "test_id": "QA-RATE-001",
@@ -206,7 +206,7 @@
     "status": "PASS",
     "severity": "HIGH",
     "evidence": "Remaining tokens: 10, retry_after: 0s",
-    "timestamp": "2026-09-30T12:52:53.351032+00:00"
+    "timestamp": "2026-10-04T15:19:18.939007+00:00"
   },
   {
     "test_id": "QA-ML-DRIFT-001",
@@ -217,17 +217,17 @@
     "status": "PASS",
     "severity": "HIGH",
     "evidence": "Metric scores: PSI=5.91829, Drift report: 100.0%",
-    "timestamp": "2026-09-30T12:52:53.357767+00:00"
+    "timestamp": "2026-10-04T15:19:18.953127+00:00"
   },
   {
     "test_id": "QA-JOURNEY-001",
     "category": "End-to-End User Journey",
     "description": "Full platform lifecycle from session creation to model artifact delivery",
     "expected_result": "Full lifecycle executes without interruption across all pipeline gates",
-    "actual_result": "Journey completed successfully for session 3265501c-bf05-4852-b7bb-8ef16d24f98d",
+    "actual_result": "Journey completed successfully for session 39acef76-e1d6-4a2d-a512-b981c0c8def1",
     "status": "PASS",
     "severity": "CRITICAL",
     "evidence": "Champion: Logistic Regression, Models trained: 4",
-    "timestamp": "2026-09-30T12:52:53.875959+00:00"
+    "timestamp": "2026-10-04T15:19:19.758386+00:00"
   }
 ]

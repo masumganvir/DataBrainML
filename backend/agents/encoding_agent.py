@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pandas as pd
 from agents.base import BaseAgent, AgentInput, AgentOutput
-from app.tools.encoding import CategoricalEncoder
+from app.tools.encoding import EncodingRecommender
 
 
 class EncodingAgent(BaseAgent):
@@ -27,8 +27,8 @@ class EncodingAgent(BaseAgent):
             if df is None:
                 return AgentOutput(session_id=self.session_id, agent_name=self.agent_name, status="error", message="Missing dataframe")
 
-            encoder = CategoricalEncoder(df, target_column=params.get("target_column"))
-            plan = encoder.generate_plan()
+            recommender = EncodingRecommender(df)
+            plan = recommender.recommend_all()
 
             return AgentOutput(
                 session_id=self.session_id,

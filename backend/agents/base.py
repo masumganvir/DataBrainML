@@ -147,27 +147,37 @@ def load_dataframe_safely(path: Union[str, Path], max_rows: Optional[int] = None
         return None
 
 
-from app.agents.base.base_agent import BaseAgent as Phase2BaseAgent
-
-
-class BaseAgent(Phase2BaseAgent, ABC):
+class BaseAgent(ABC):
     """Abstract Base Class for all Data Science Agents."""
 
     def __init__(self, session_id: str = "", agent_name: str = "BaseAgent", **kwargs: Any):
-        super().__init__(
-            name=kwargs.get("name", agent_name),
-            role=kwargs.get("role", agent_name),
-            description=kwargs.get("description", f"{agent_name} agent"),
-            system_prompt=kwargs.get("system_prompt", ""),
-        )
+        self.name = kwargs.get("name", agent_name)
+        self.role = kwargs.get("role", agent_name)
+        self.description = kwargs.get("description", f"{agent_name} agent")
+        self.system_prompt = kwargs.get("system_prompt", "")
         self.session_id = session_id
         self.agent_name = agent_name
-        self.name = agent_name
 
-    @abstractmethod
+    def _load_df(self, state: Any) -> Optional[pd.DataFrame]:
+        """Utility to safely load the current working dataset from state paths."""
+        if isinstance(state, dict):
+            path = state.get("dataset_path_analysis") or state.get("dataset_path_original") or state.get("dataset_path")
+        elif hasattr(state, "dataset_path"):
+            path = getattr(state, "dataset_path")
+        else:
+            path = None
+        if not path:
+            return None
+        return load_dataframe_safely(path)
+
     def analyze(self, input_data: AgentInput) -> AgentOutput:
-        """Core execution logic. Subclasses implement this."""
-        pass
+        """Core execution logic. Subclasses implement either analyze() or run()."""
+        return AgentOutput(
+            session_id=self.session_id,
+            agent_name=self.agent_name,
+            status="success",
+            message=f"{self.agent_name} executed successfully.",
+        )
 
     def validate(self, output: AgentOutput) -> AgentOutput:
         """Validate output schema, ensure timings and agent names match."""

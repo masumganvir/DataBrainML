@@ -17,6 +17,17 @@ const apiClient: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+apiClient.interceptors.request.use((config) => {
+  const token =
+    localStorage.getItem('datalab_auth_state') ||
+    localStorage.getItem('access_token') ||
+    localStorage.getItem('token');
+  if (token && !config.headers['Authorization']) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -388,6 +399,13 @@ export const projectsApi = {
   predict: (projectId: string, features: Record<string, any>): Promise<any> =>
     apiClient.post(`/projects/${projectId}/predict`, { features }).then((r) => r.data),
 
+  getNotebook: (projectId: string, runId?: string): Promise<{ project_id: string; run_id: string; filename: string; cells: any[] }> =>
+    apiClient.get(`/projects/${projectId}/notebook`, { params: { run_id: runId } }).then((r) => r.data),
+
+  getEDA: (projectId: string, runId?: string): Promise<any> =>
+    apiClient.get(`/projects/${projectId}/eda`, { params: { run_id: runId } }).then((r) => r.data),
+
+
   createWebSocket: (projectId: string, runId: string): WebSocket => {
     const wsUrl = BASE_URL.replace(/^http/, 'ws');
     return new WebSocket(`${wsUrl}/api/projects/${projectId}/runs/${runId}/events`);
@@ -395,11 +413,25 @@ export const projectsApi = {
 };
 
 // ------------------------------------------------------------------ //
-//  Health
+//  Health & Auth
 // ------------------------------------------------------------------ //
 export const healthApi = {
   check: (): Promise<{ status: string; version: string }> =>
     apiClient.get('/health').then((r) => r.data),
+};
+
+export const authApi = {
+  login: (email: string, password: string): Promise<{ access_token: string; token_type: string; user: any }> =>
+    apiClient.post('/auth/login', { email, password }).then((r) => r.data),
+
+  register: (data: { email: string; password: string; name?: string; role?: string }): Promise<{ access_token: string; token_type: string; user: any }> =>
+    apiClient.post('/auth/register', data).then((r) => r.data),
+
+  me: (): Promise<any> =>
+    apiClient.get('/auth/me').then((r) => r.data),
+
+  logout: (): Promise<any> =>
+    apiClient.post('/auth/logout').then((r) => r.data),
 };
 
 export { BASE_URL };

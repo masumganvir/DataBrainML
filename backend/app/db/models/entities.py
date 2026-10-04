@@ -745,6 +745,26 @@ class AgentEvent(Base):
     agent_run: AgentRun = relationship("AgentRun", back_populates="events")
 
 
+class PipelineStage(Base):
+    """Pipeline Stage progression entity (Prompt Section 12)."""
+    __tablename__ = "pipeline_stages"
+
+    id: str = Column(String(36), primary_key=True, default=_uuid)
+    run_id: str = Column(String(36), nullable=False, index=True)
+    owner_id: Optional[str] = Column(String(36), nullable=True, index=True)
+    stage_name: str = Column(String(100), nullable=False)
+    sequence: int = Column(Integer, default=0, nullable=False)
+    status: str = Column(String(50), default="queued", nullable=False)
+    started_at: Optional[datetime] = Column(DateTime, nullable=True)
+    completed_at: Optional[datetime] = Column(DateTime, nullable=True)
+    duration_ms: Optional[int] = Column(Integer, nullable=True)
+    summary: Optional[str] = Column(Text, nullable=True)
+    warning: Optional[str] = Column(Text, nullable=True)
+    error_code: Optional[str] = Column(String(100), nullable=True)
+    artifact_ids: Optional[dict] = Column(JSON, default=list, nullable=True)
+    created_at: datetime = Column(DateTime, server_default=func.now(), nullable=False, index=True)
+
+
 class UserDecisionRecord(Base):
     """Traceability for Human-In-The-Loop approvals and choices."""
     __tablename__ = "user_decisions"

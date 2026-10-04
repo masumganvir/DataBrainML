@@ -22,10 +22,12 @@ from app.api.endpoints.registry import router as registry_router
 from app.api.endpoints.inference import router as inference_router
 from app.api.endpoints.realtime_platform import router as realtime_platform_router
 from app.api.endpoints.projects import router as projects_router
+from app.api.endpoints.auth import router as auth_router
 
 api_router = APIRouter()
 
 # Core routes (always available)
+api_router.include_router(auth_router, prefix="/auth", tags=["Authentication & Identity"])
 api_router.include_router(health_router, prefix="/health", tags=["System"])
 api_router.include_router(realtime_platform_router, tags=["Realtime AutoML & MLOps Platform"])
 api_router.include_router(projects_router, prefix="/projects", tags=["Projects & Agentic AutoML"])

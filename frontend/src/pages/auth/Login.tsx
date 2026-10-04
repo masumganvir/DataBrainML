@@ -3,43 +3,42 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
 import { BRANDING } from '../../config/branding';
+import { authApi } from '../../services/api';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
-  const [email, setEmail] = useState('scientist@datalab.internal');
-  const [password, setPassword] = useState('SuperSecret123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg('');
 
-    // Simulate safe authentication check
-    setTimeout(() => {
-      if (email && password) {
-        login(
-          {
-            id: 'usr-1',
-            email,
-            name: 'Lead Data Scientist',
-            role: 'admin',
-            organization_id: 'org-enterprise-1',
-            organization_name: 'Acme Analytics',
-            mfa_enabled: true,
-            created_at: new Date().toISOString(),
-          },
-          'jwt-token-verified-by-server'
-        );
-        navigate('/app/dashboard');
-      } else {
-        // OWASP generic failure response
-        setErrorMsg('Invalid credentials or unauthorized login request.');
-      }
+    try {
+      const res = await authApi.login(email, password);
+      login(
+        {
+          id: res.user.id,
+          email: res.user.email,
+          name: res.user.name || 'Data Scientist',
+          role: res.user.role || 'data_scientist',
+          organization_id: 'org-enterprise-1',
+          organization_name: 'DataWise Enterprise',
+          mfa_enabled: false,
+          created_at: new Date().toISOString(),
+        },
+        res.access_token
+      );
+      navigate('/app/dashboard');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Incorrect email or password.');
+    } finally {
       setIsLoading(false);
-    }, 400);
+    }
   };
 
   return (

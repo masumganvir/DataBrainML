@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, User, Building, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
 import { BRANDING } from '../../config/branding';
+import { authApi } from '../../services/api';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -11,29 +12,40 @@ export const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [org, setOrg] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMsg('');
 
-    setTimeout(() => {
+    try {
+      const res = await authApi.register({
+        email,
+        password,
+        name: name || 'Data Scientist',
+        role: 'data_scientist',
+      });
       login(
         {
-          id: `usr-${Date.now()}`,
-          email,
-          name: name || 'Data Scientist',
-          role: 'admin',
-          organization_id: `org-${Date.now()}`,
-          organization_name: org || 'Acme Analytics',
+          id: res.user.id,
+          email: res.user.email,
+          name: res.user.name || name || 'Data Scientist',
+          role: res.user.role || 'data_scientist',
+          organization_id: org ? `org-${org.toLowerCase().replace(/\s+/g, '-')}` : 'org-default',
+          organization_name: org || 'Personal Workspace',
           mfa_enabled: false,
           created_at: new Date().toISOString(),
         },
-        'mock-jwt-registered-verified'
+        res.access_token
       );
       navigate('/app/dashboard');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Registration failed. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -48,6 +60,13 @@ export const Register: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-100">Create an Account</h1>
           <p className="text-xs text-slate-400">Join your enterprise AI workspace</p>
         </div>
+
+        {errorMsg && (
+          <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>

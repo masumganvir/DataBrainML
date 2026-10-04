@@ -22,16 +22,35 @@ from app.config.settings import get_settings
 settings = get_settings()
 
 
+try:
+    from argon2 import PasswordHasher
+    from argon2.exceptions import VerifyMismatchError
+    _hasher = PasswordHasher()
+except ImportError:
+    _hasher = None
+
+
 def hash_password(password: str) -> str:
-    """Hash password using salt + PBKDF2-HMAC-SHA256."""
+    """Hash password using Argon2id with salt + PBKDF2-HMAC-SHA256 fallback."""
+    if _hasher is not None:
+        return f"argon2id${_hasher.hash(password)}"
     salt = os.urandom(16)
     key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000)
     return f"{salt.hex()}${key.hex()}"
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against stored salt$hash string."""
+    """Verify password against stored Argon2id or salt$hash string."""
     try:
+        if hashed_password.startswith("argon2id$") and _hasher is not None:
+            raw_hash = hashed_password.split("argon2id$", 1)[1]
+            try:
+                return _hasher.verify(raw_hash, plain_password)
+            except VerifyMismatchError:
+                return False
+            except Exception:
+                return False
+
         parts = hashed_password.split("$")
         if len(parts) != 2:
             return False

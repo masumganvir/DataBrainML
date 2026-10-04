@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pandas as pd
 from agents.base import BaseAgent, AgentInput, AgentOutput
-from app.tools.scaling import FeatureScaler
+from app.tools.scaling import ScalingRecommender
 
 
 class ScalingAgent(BaseAgent):
@@ -27,8 +27,8 @@ class ScalingAgent(BaseAgent):
             if df is None:
                 return AgentOutput(session_id=self.session_id, agent_name=self.agent_name, status="error", message="Missing dataframe")
 
-            scaler = FeatureScaler(df)
-            plan = scaler.generate_plan()
+            recommender = ScalingRecommender(df)
+            plan = recommender.recommend_all()
 
             return AgentOutput(
                 session_id=self.session_id,

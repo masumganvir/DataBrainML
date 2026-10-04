@@ -499,3 +499,7 @@ def package_model_artifact(
         "zip_path": zip_path,
     }
 
+
+package_model_artifacts = package_model_artifact
+
+

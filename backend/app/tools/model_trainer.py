@@ -11,6 +11,7 @@ Enforces strict data leakage prevention:
 
 from __future__ import annotations
 
+import re
 import time
 from typing import Any, Dict, List, Literal, Optional, Tuple
 
@@ -72,6 +73,21 @@ class ModelTrainer:
         self.X_raw = self.df.drop(columns=[target_col])
         self.y_raw = self.df[target_col]
 
+        # Automatic Identifier / Leakage column exclusion
+        total_rows = len(self.df)
+        id_pattern = re.compile(r"(^id$|_id$|^id_|uuid|guid|key|index|row_num|record)", re.IGNORECASE)
+        id_cols = []
+        for c in self.X_raw.columns:
+            n_unq = self.X_raw[c].nunique()
+            if id_pattern.search(c) and n_unq > max(20, total_rows * 0.2):
+                id_cols.append(c)
+            elif total_rows > 500 and n_unq > total_rows * 0.7:
+                id_cols.append(c)
+
+        if id_cols:
+            logger.info(f"[ModelTrainer] Excluded {len(id_cols)} high-cardinality identifier columns: {id_cols}")
+            self.X_raw = self.X_raw.drop(columns=id_cols)
+
         # Identify numerical and categorical features
         self.num_cols = [
             c for c in self.X_raw.columns
@@ -132,7 +148,7 @@ class ModelTrainer:
         if self.cat_cols:
             cat_pipe = Pipeline([
                 ("imputer", SimpleImputer(strategy="most_frequent")),
-                ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+                ("encoder", OneHotEncoder(max_categories=20, handle_unknown="ignore", sparse_output=False)),
             ])
             transformers.append(("cat", cat_pipe, self.cat_cols))
 
@@ -201,6 +217,16 @@ class ModelTrainer:
         # Sklearn scoring string mapping
         scoring_metric = self._map_scoring_metric()
 
+        # Fast exploration subsampling for large datasets (industry AutoML standard)
+        if len(X_train) > 10000:
+            strat_sample = y_train if (self.task_type == "classification" and len(np.unique(y_train)) >= 2) else None
+            X_train_cv, _, y_train_cv, _ = train_test_split(
+                X_train, y_train, train_size=8000, random_state=self.random_state, stratify=strat_sample
+            )
+            logger.info(f"[ModelTrainer] Using stratified 8,000-row sample for fast CV evaluation on large dataset ({len(X_train)} rows).")
+        else:
+            X_train_cv, y_train_cv = X_train, y_train
+
         for model_name, estimator in candidates.items():
             t0 = time.time()
             pipe = Pipeline([
@@ -208,9 +234,9 @@ class ModelTrainer:
                 ("model", estimator),
             ])
 
-            # Perform Cross-Validation strictly on Training Split
+            # Perform Cross-Validation strictly on Training Split with all CPU cores
             try:
-                cv_scores = cross_val_score(pipe, X_train, y_train, cv=cv_gen, scoring=scoring_metric)
+                cv_scores = cross_val_score(pipe, X_train_cv, y_train_cv, cv=cv_gen, scoring=scoring_metric, n_jobs=-1)
                 # Invert negative regression scores
                 if "neg_" in scoring_metric:
                     cv_scores = -cv_scores
@@ -222,8 +248,17 @@ class ModelTrainer:
                 cv_mean = 0.0
                 cv_std = 0.0
 
-            # Fit Pipeline on Full Training Split
-            pipe.fit(X_train, y_train)
+            # Fit Pipeline on Training Split (with smart time cap on very large datasets)
+            fit_size = min(30000, len(X_train)) if len(X_train) > 35000 else len(X_train)
+            if fit_size < len(X_train):
+                strat_fit = y_train if (self.task_type == "classification" and len(np.unique(y_train)) >= 2) else None
+                X_fit, _, y_fit, _ = train_test_split(
+                    X_train, y_train, train_size=fit_size, random_state=self.random_state, stratify=strat_fit
+                )
+                pipe.fit(X_fit, y_fit)
+            else:
+                pipe.fit(X_train, y_train)
+
             train_duration = round(time.time() - t0, 3)
 
             # Evaluate on Untouched Test Set
@@ -288,20 +323,20 @@ class ModelTrainer:
         n_rows = len(self.df)
         if self.task_type == "classification":
             candidates: Dict[str, Any] = {
-                "Logistic Regression": LogisticRegression(max_iter=500, random_state=self.random_state),
-                "Random Forest": RandomForestClassifier(n_estimators=50, max_depth=10, random_state=self.random_state),
                 "HistGradientBoosting": HistGradientBoostingClassifier(max_iter=50, random_state=self.random_state),
+                "Random Forest": RandomForestClassifier(n_estimators=30, max_depth=10, n_jobs=-1, random_state=self.random_state),
+                "Logistic Regression": LogisticRegression(max_iter=150, n_jobs=-1, random_state=self.random_state),
             }
-            if n_rows < 1500:
+            if n_rows < 5000:
                 candidates["Decision Tree"] = DecisionTreeClassifier(max_depth=6, random_state=self.random_state)
             return candidates
         else:
             candidates: Dict[str, Any] = {
-                "Ridge Regression": Ridge(alpha=1.0, random_state=self.random_state),
-                "Random Forest Regressor": RandomForestRegressor(n_estimators=50, max_depth=10, random_state=self.random_state),
                 "HistGradientBoosting Regressor": HistGradientBoostingRegressor(max_iter=50, random_state=self.random_state),
+                "Random Forest Regressor": RandomForestRegressor(n_estimators=30, max_depth=10, n_jobs=-1, random_state=self.random_state),
+                "Ridge Regression": Ridge(alpha=1.0, random_state=self.random_state),
             }
-            if n_rows < 1500:
+            if n_rows < 5000:
                 candidates["ElasticNet"] = ElasticNet(alpha=0.5, l1_ratio=0.5, random_state=self.random_state)
             return candidates
 
