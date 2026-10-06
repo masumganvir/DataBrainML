@@ -56,7 +56,9 @@ frontend/.env
 # IDE
 .vscode/
 .idea/
+.agents/
 *.swp
+*.tsbuildinfo
 
 # OS
 .DS_Store

@@ -26,7 +26,7 @@ export function ProjectDetail() {
   const [project, setProject] = useState<Project | null>(null)
 
   useEffect(() => {
-    const found = DEMO_PROJECTS.find((p) => p.id === projectId) || authStore.getState().currentProject || DEMO_PROJECTS[0]
+    const found = DEMO_PROJECTS.find((p: Project) => p.id === projectId) || authStore.getState().currentProject || DEMO_PROJECTS[0]
     setProject(found)
     authStore.setCurrentProject(found)
   }, [projectId])

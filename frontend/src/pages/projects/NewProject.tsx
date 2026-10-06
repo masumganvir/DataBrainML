@@ -142,10 +142,8 @@ export function NewProject() {
   const navigate = useNavigate()
 
   // Project Configuration
-  const [projectName, setProjectName] = useState('Customer Churn Prediction')
-  const [prompt, setPrompt] = useState(
-    'Analyze this customer dataset and build a model that predicts customer churn. Prioritize recall because missing a potential churn customer is more costly than a false positive.'
-  )
+  const [projectName, setProjectName] = useState('')
+  const [prompt, setPrompt] = useState('')
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
 
   // Advanced Options
@@ -168,15 +166,25 @@ export function NewProject() {
   const [isStarting, setIsStarting] = useState(false)
   const [createdProjectId, setCreatedProjectId] = useState<string>('')
 
+  // AI Project Planner & Human Approval Modals
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false)
+  const [aiProposal, setAiProposal] = useState<any>(null)
+  const [isEditingProposal, setIsEditingProposal] = useState(false)
+  const [duplicateWarning, setDuplicateWarning] = useState<any>(null)
+  const [isPlanning, setIsPlanning] = useState(false)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ── FIX: Create project first, then upload to the real DB project ID ──
-  const ensureProjectCreated = async (): Promise<string> => {
+  // ── Create project immediately using explicit name (avoids React closure state race) ──
+  const ensureProjectCreated = async (customName?: string): Promise<string> => {
     if (createdProjectId) return createdProjectId
+    const activeName = (customName || projectName || 'New ML Project').trim()
+    const activePrompt = prompt.trim() || `Analyze this dataset and build a high-performance predictive model.`
+
     const proj = await projectsApi.create({
-      name: projectName || 'New ML Project',
-      description: `Autonomous ML analysis`,
-      prompt,
+      name: activeName,
+      description: `Autonomous ML analysis for ${activeName}`,
+      prompt: activePrompt,
       configuration: {
         target_column: targetColumn,
         task_type: taskType,
@@ -192,10 +200,11 @@ export function NewProject() {
   }
 
   // Process Dataset File
-  const handleFileUpload = async (selectedFile: File) => {
+  const handleFileUpload = async (selectedFile: File, forceUpload: boolean = false) => {
     setFile(selectedFile)
     setUploadStatus('uploading')
     setErrorMessage('')
+    setDuplicateWarning(null)
 
     // Derive project name from file
     const cleanName = selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')
@@ -204,7 +213,9 @@ export function NewProject() {
       .filter(Boolean)
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(' ')
-    if (titleCase) {
+
+    const activeProjectName = (projectName.trim() || titleCase || 'New ML Project').trim()
+    if (!projectName.trim() && titleCase) {
       setProjectName(titleCase)
     }
 
@@ -218,12 +229,17 @@ export function NewProject() {
 
     try {
       setUploadStatus('profiling')
-      // Ensure project exists in DB before uploading
-      const projId = await ensureProjectCreated()
+      const projId = await ensureProjectCreated(activeProjectName)
 
       const result = await projectsApi.uploadDataset(projId, selectedFile, (pct) => {
         setUploadProgress(pct)
       })
+
+      if (result.duplicate && !forceUpload) {
+        setDuplicateWarning(result)
+        setUploadStatus('idle')
+        return
+      }
 
       if (result.dataset || result.row_count) {
         const meta = result.dataset || result
@@ -245,6 +261,23 @@ export function NewProject() {
             `Analyze this dataset to predict '${recTarget || 'target'}' using an autonomous ML pipeline. Maximize generalization performance and explain feature contributions.`
           )
         }
+
+        // Proactively generate AI Project Plan proposal
+        setIsPlanning(true)
+        try {
+          const planRes = await projectsApi.proposePlan(projId, {
+            prompt: prompt.trim() || `Analyze this dataset to predict '${recTarget || 'target'}'`,
+            custom_name: activeProjectName,
+          })
+          if (planRes?.proposal) {
+            setAiProposal(planRes.proposal)
+            setIsProposalModalOpen(true)
+          }
+        } catch (planErr) {
+          console.warn('Could not generate plan proposal:', planErr)
+        } finally {
+          setIsPlanning(false)
+        }
       } else {
         setUploadStatus('ready')
       }
@@ -260,9 +293,9 @@ export function NewProject() {
     setErrorMessage('')
     try {
       let dummyCsv = ''
-      let derivedTitle = 'Customer Churn Prediction'
-      let derivedPrompt = 'Predict customer churn with high recall.'
-      let derivedTarget = 'churn'
+      let derivedTitle = 'Sample Dataset Analysis'
+      let derivedPrompt = 'Train high-performance predictive model on benchmark data.'
+      let derivedTarget = 'target'
       let derivedTask = 'Classification'
 
       if (sampleName === 'telecom_churn') {
@@ -429,6 +462,49 @@ export function NewProject() {
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to start AI analysis run')
       setIsStarting(false)
+    }
+  }
+
+  // AI Project Planner actions
+  const handleApproveProposal = async () => {
+    if (!createdProjectId || !aiProposal) return
+    try {
+      await projectsApi.approvePlan(createdProjectId, { proposal: aiProposal })
+      if (aiProposal.project_name) setProjectName(aiProposal.project_name)
+      if (aiProposal.target_candidate) setTargetColumn(aiProposal.target_candidate)
+      if (aiProposal.task_type) {
+        const fmt = aiProposal.task_type.charAt(0).toUpperCase() + aiProposal.task_type.slice(1)
+        setTaskType(fmt)
+      }
+      setIsProposalModalOpen(false)
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to approve AI proposal')
+    }
+  }
+
+  const handleRegenerateProposal = async () => {
+    if (!createdProjectId) return
+    setIsPlanning(true)
+    try {
+      const res = await projectsApi.regeneratePlan(createdProjectId, {
+        prompt: prompt.trim() || undefined,
+        custom_name: projectName.trim() || undefined,
+      })
+      if (res?.proposal) {
+        setAiProposal(res.proposal)
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to regenerate plan')
+    } finally {
+      setIsPlanning(false)
+    }
+  }
+
+  const handleForceUploadDuplicate = async () => {
+    if (file) {
+      const currentFile = file
+      setDuplicateWarning(null)
+      await handleFileUpload(currentFile, true)
     }
   }
 
@@ -672,7 +748,7 @@ export function NewProject() {
                 type="text"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
-                placeholder="e.g. Customer Churn Prediction, Fraud Detection, LTV Forecasting"
+                placeholder="e.g. Credit Card Fraud Detection, House Price Prediction, Sales Forecasting"
                 style={{
                   width: '100%',
                   padding: '13px 18px',
@@ -1029,7 +1105,7 @@ export function NewProject() {
                 rows={5}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Analyze this customer dataset and build a model that predicts customer churn. Prioritize recall because missing a potential churn customer is more costly than a false positive."
+                placeholder="e.g. Build an autonomous model with high generalization, optimize F1/RMSE, and explain key feature contributions."
                 style={{
                   width: '100%',
                   padding: '14px 18px',
@@ -1497,6 +1573,423 @@ export function NewProject() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── AI PROJECT PLANNER PROPOSAL MODAL (HUMAN-IN-THE-LOOP) ── */}
+        {isProposalModalOpen && aiProposal && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              backgroundColor: 'rgba(5, 7, 15, 0.82)',
+              backdropFilter: 'blur(10px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px',
+            }}
+          >
+            <div
+              className="np-card np-slide-up"
+              style={{
+                width: '100%',
+                maxWidth: '740px',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                background: 'linear-gradient(135deg, rgba(23, 27, 44, 0.98) 0%, rgba(15, 18, 30, 0.98) 100%)',
+                border: '1px solid rgba(99, 102, 241, 0.35)',
+                borderRadius: '20px',
+                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(99, 102, 241, 0.15)',
+                padding: '32px',
+                position: 'relative',
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 8px 20px rgba(99,102,241,0.4)',
+                    }}
+                  >
+                    <Sparkles size={22} color="#fff" />
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: '#f8fafc' }}>
+                      AI Project Proposal
+                    </h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>
+                      Human Approval Required &bull; Review AI-recommended strategy before autonomous execution
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsProposalModalOpen(false)}
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    width: '32px',
+                    height: '32px',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Proposal Content */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                {/* Project Name Field */}
+                <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '12px', padding: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#818cf8', fontWeight: 700 }}>
+                      Proposed Project Name
+                    </label>
+                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Editable by user</span>
+                  </div>
+                  {isEditingProposal ? (
+                    <input
+                      type="text"
+                      value={aiProposal.project_name || ''}
+                      onChange={(e) => setAiProposal({ ...aiProposal, project_name: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        background: 'rgba(15, 23, 42, 0.8)',
+                        border: '1px solid #6366f1',
+                        borderRadius: '8px',
+                        color: '#f8fafc',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                      }}
+                    />
+                  ) : (
+                    <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#f8fafc' }}>
+                      {aiProposal.project_name || 'Autonomous ML Project'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Objective & Business Problem */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '14px' }}>
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
+                      Objective
+                    </div>
+                    {isEditingProposal ? (
+                      <textarea
+                        rows={3}
+                        value={aiProposal.objective || ''}
+                        onChange={(e) => setAiProposal({ ...aiProposal, objective: e.target.value })}
+                        style={{ width: '100%', padding: '8px', background: 'rgba(15,23,42,0.8)', border: '1px solid #6366f1', borderRadius: '6px', color: '#fff', fontSize: '0.82rem' }}
+                      />
+                    ) : (
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#cbd5e1', lineHeight: 1.45 }}>
+                        {aiProposal.objective || 'Predict key outcomes with maximum accuracy and explainability.'}
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '14px' }}>
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
+                      Business Problem
+                    </div>
+                    {isEditingProposal ? (
+                      <textarea
+                        rows={3}
+                        value={aiProposal.business_problem || ''}
+                        onChange={(e) => setAiProposal({ ...aiProposal, business_problem: e.target.value })}
+                        style={{ width: '100%', padding: '8px', background: 'rgba(15,23,42,0.8)', border: '1px solid #6366f1', borderRadius: '6px', color: '#fff', fontSize: '0.82rem' }}
+                      />
+                    ) : (
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#cbd5e1', lineHeight: 1.45 }}>
+                        {aiProposal.business_problem || 'Optimize downstream business decision making.'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Technical Specs: Target, Task, Metrics */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div style={{ background: 'rgba(99,102,241,0.08)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(99,102,241,0.2)' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#818cf8', fontWeight: 700, textTransform: 'uppercase' }}>Target Column</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', marginTop: '4px' }}>
+                      {aiProposal.target_candidate || 'Auto'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(16,185,129,0.08)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(16,185,129,0.2)' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#34d399', fontWeight: 700, textTransform: 'uppercase' }}>ML Task</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', marginTop: '4px', textTransform: 'capitalize' }}>
+                      {aiProposal.task_type || 'Classification'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(245,158,11,0.08)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(245,158,11,0.2)' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#fbbf24', fontWeight: 700, textTransform: 'uppercase' }}>Primary Metric</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', marginTop: '4px' }}>
+                      {aiProposal.primary_metric || 'F1 / ROC-AUC'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pipeline Strategy */}
+                {aiProposal.recommended_pipeline && aiProposal.recommended_pipeline.length > 0 && (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '8px' }}>
+                      Recommended Execution Pipeline
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {aiProposal.recommended_pipeline.map((step: string, idx: number) => (
+                        <span
+                          key={idx}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            background: 'rgba(99,102,241,0.15)',
+                            color: '#c7d2fe',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            border: '1px solid rgba(99,102,241,0.3)',
+                          }}
+                        >
+                          {idx + 1}. {step}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Deployment Context */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#94a3b8' }}>
+                  <Cpu size={15} color="#818cf8" />
+                  <span>Deployment Context: <strong style={{ color: '#e2e8f0' }}>{aiProposal.deployment_context || 'REST API microservice / Docker container'}</strong></span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div
+                style={{
+                  marginTop: '28px',
+                  paddingTop: '20px',
+                  borderTop: '1px solid rgba(255,255,255,0.08)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    onClick={() => setIsEditingProposal(!isEditingProposal)}
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: '10px',
+                      background: isEditingProposal ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: '#f8fafc',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Sliders size={15} />
+                    {isEditingProposal ? 'Done Editing' : 'Edit Plan'}
+                  </button>
+                  <button
+                    onClick={handleRegenerateProposal}
+                    disabled={isPlanning}
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: '10px',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: '#f8fafc',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      cursor: isPlanning ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <RefreshCw size={15} className={isPlanning ? 'np-spin-slow' : ''} />
+                    {isPlanning ? 'Regenerating...' : 'Regenerate'}
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    onClick={() => setIsProposalModalOpen(false)}
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: '10px',
+                      background: 'transparent',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: '#94a3b8',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleApproveProposal}
+                    className="np-btn-glow"
+                    style={{
+                      padding: '11px 24px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      border: 'none',
+                      color: '#ffffff',
+                      fontSize: '0.9rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      boxShadow: '0 8px 25px rgba(16, 185, 129, 0.4)',
+                    }}
+                  >
+                    <CheckCircle2 size={17} />
+                    Approve & Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── DUPLICATE DATASET WARNING MODAL ── */}
+        {duplicateWarning && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              backgroundColor: 'rgba(5, 7, 15, 0.85)',
+              backdropFilter: 'blur(10px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px',
+            }}
+          >
+            <div
+              className="np-card np-slide-up"
+              style={{
+                width: '100%',
+                maxWidth: '560px',
+                background: 'linear-gradient(135deg, rgba(30, 24, 18, 0.98) 0%, rgba(20, 16, 14, 0.98) 100%)',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                borderRadius: '20px',
+                padding: '30px',
+                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(245, 158, 11, 0.2)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+                <div
+                  style={{
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '12px',
+                    background: 'rgba(245, 158, 11, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fbbf24',
+                  }}
+                >
+                  <AlertCircle size={26} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#fef3c7' }}>
+                    Duplicate Dataset Detected
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#d97706' }}>
+                    SHA-256 match found in project storage
+                  </p>
+                </div>
+              </div>
+
+              <p style={{ fontSize: '0.88rem', color: '#cbd5e1', lineHeight: 1.5, marginBottom: '22px' }}>
+                This dataset already exists in this project (SHA-256:{' '}
+                <code style={{ fontSize: '0.75rem', background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: '4px', color: '#fbbf24' }}>
+                  {duplicateWarning.file_hash ? duplicateWarning.file_hash.substring(0, 16) + '...' : 'matched'}
+                </code>
+                ). What would you like to do?
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <button
+                  onClick={() => {
+                    setDuplicateWarning(null)
+                    if (createdProjectId) navigate(`/projects/${createdProjectId}`)
+                  }}
+                  style={{
+                    padding: '12px 18px',
+                    borderRadius: '10px',
+                    background: 'rgba(99, 102, 241, 0.2)',
+                    border: '1px solid rgba(99, 102, 241, 0.4)',
+                    color: '#c7d2fe',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  &rarr; Use Existing Dataset &amp; Analysis
+                </button>
+                <button
+                  onClick={handleForceUploadDuplicate}
+                  style={{
+                    padding: '12px 18px',
+                    borderRadius: '10px',
+                    background: 'rgba(245, 158, 11, 0.2)',
+                    border: '1px solid rgba(245, 158, 11, 0.4)',
+                    color: '#fef3c7',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  &rarr; Create New Dataset Version (Force Re-upload)
+                </button>
+                <button
+                  onClick={() => {
+                    setDuplicateWarning(null)
+                    setFile(null)
+                  }}
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: '10px',
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#94a3b8',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}

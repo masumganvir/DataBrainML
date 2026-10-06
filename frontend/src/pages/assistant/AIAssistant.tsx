@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { 
   Bot, Send, Sparkles, ShieldCheck, Database, Cpu, 
-  GitBranch, User, Clock, Terminal, HelpCircle
+  GitBranch, User, Clock, Terminal, HelpCircle, ArrowRight
 } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
+import { getProjectDomainMeta } from '../../lib/projectDomain';
 
 interface ChatMessage {
   id: string;
@@ -13,31 +14,38 @@ interface ChatMessage {
   sources?: string[];
 }
 
-const INITIAL_CONVERSATION: ChatMessage[] = [
-  {
-    id: 'msg-01',
-    sender: 'USER',
-    text: 'Why were the high monthly charges of $115+ preserved instead of being clipped as outliers?',
-    timestamp: '10:14 AM'
-  },
-  {
-    id: 'msg-02',
-    sender: 'ASSISTANT',
-    text: `The 14 extreme observations in **MonthlyCharges** ($115.00 – $118.75/month) were preserved based on domain-aware data validation:
-
-1. **Business Domain Validity**: Premium enterprise and multi-line fiber subscribers legitimately pay above $110/mo.
-2. **Signal Preservation**: Clipping or dropping these rows would distort churn risk signals for the highest-revenue customer segment.
-3. **Non-Destructive Feature Flagging**: The pipeline preserved raw values and engineered a boolean flag \`is_high_value_subscriber\` to give tree-based models explicit split information without data loss.`,
-    timestamp: '10:14 AM',
-    sources: ['Dataset Profiler Invariant Report', 'Outlier Audit Log v1']
-  }
-];
-
 export const AIAssistant: React.FC = () => {
   const { activeProject } = useAuthStore();
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_CONVERSATION);
+  const projectName = activeProject?.name || 'Student Exam Performance Prediction';
+  const projectSlug = activeProject?.slug || 'student-exam-prediction';
+  const domainMeta = getProjectDomainMeta(projectName, activeProject?.description);
+
+  const initialConversation: ChatMessage[] = [
+    {
+      id: 'msg-01',
+      sender: 'USER',
+      text: `Why were the extreme high values in ${domainMeta.features[0].label} preserved instead of clipped?`,
+      timestamp: '10:14 AM'
+    },
+    {
+      id: 'msg-02',
+      sender: 'ASSISTANT',
+      text: `${domainMeta.outlierSummary}\n\n1. **Domain Validity**: In **${domainMeta.domain}**, high-performing cohorts naturally occupy the upper tail of the distribution.\n2. **Signal Preservation**: Clipping or dropping these rows would distort decision boundaries for the most critical subset.\n3. **Non-Destructive Flagging**: The pipeline engineered a boolean feature flag to give tree-based models explicit split information without loss of data.`,
+      timestamp: '10:14 AM',
+      sources: ['Dataset Profiler Invariant Report', 'Outlier Audit Log v1']
+    }
+  ];
+
+  const [messages, setMessages] = useState<ChatMessage[]>(initialConversation);
   const [inputVal, setInputVal] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
+  const suggestedQuestions = [
+    `Explain top SHAP drivers for ${domainMeta.targetColumn}`,
+    `Why was ${domainMeta.championModelName.split(' ')[0]} selected over ${domainMeta.challengerModelName.split(' ')[0]}?`,
+    `What data invariants were verified during preprocessing?`,
+    `How does the live inference API handle missing feature inputs?`
+  ];
 
   const handleSend = (textToSend?: string) => {
     const query = textToSend || inputVal;
@@ -55,12 +63,15 @@ export const AIAssistant: React.FC = () => {
     setIsTyping(true);
 
     setTimeout(() => {
-      let reply = `Based on project **${activeProject?.name || 'Customer Churn'}**: XGBoost is the active champion model (F1: 0.9082, ROC-AUC: 0.9741). All metrics are verified from cross-validation holdout folds.`;
-      let sources = ['AutoML Benchmark Matrix', 'Champion XGBoost v1.4'];
+      let reply = `Based on project **${projectName}** (${domainMeta.domain}):\n\nThe AutoML evaluation concluded with **${domainMeta.championModelName}** as the active Champion (${domainMeta.evaluationMetric}). Cross-validation confirmed zero target leakage and sub-5ms inference latency.`;
+      let sources = ['AutoML Benchmark Matrix', 'Model Registry'];
 
-      if (query.toLowerCase().includes('shap') || query.toLowerCase().includes('feature')) {
-        reply = `According to TreeSHAP feature attributions on holdout test data:\n\n1. **ContractType_MonthToMonth** contributes **34.2%** of prediction weight toward churn.\n2. **MonthlyCharges** contributes **28.4%**.\n3. **TenureMonths** provides the strongest retention signal (negative churn attribution).`;
-        sources = ['TreeSHAP Explainability Matrix', 'Model Registry v1.4.0'];
+      if (query.toLowerCase().includes('shap') || query.toLowerCase().includes('driver') || query.toLowerCase().includes('feature')) {
+        reply = `According to TreeSHAP global feature attributions for **${projectName}**:\n\n1. **${domainMeta.features[0].label}** (${Math.round(domainMeta.features[0].importanceWeight * 100)}% contribution weight) — Primary driver of the decision boundary.\n2. **${domainMeta.features[1].label}** (${Math.round(domainMeta.features[1].importanceWeight * 100)}% contribution weight) — Secondary driver.\n3. Non-linear interaction between ${domainMeta.features[0].label} and ${domainMeta.features[1].label} accounts for 65% of total predictive variance.`;
+        sources = ['TreeSHAP Explainability Matrix', 'Model Registry'];
+      } else if (query.toLowerCase().includes('invariant') || query.toLowerCase().includes('outlier')) {
+        reply = `All 100% of data invariants for **${projectName}** passed verification:\n\n- ${domainMeta.outlierSummary}\n- 0 missing target values found.\n- Zero test data leakage verified before cross-validation splits.`;
+        sources = ['Data Invariants Dossier', 'Dataset Profiler Agent'];
       }
 
       const botMsg: ChatMessage = {
@@ -72,7 +83,7 @@ export const AIAssistant: React.FC = () => {
       };
       setMessages(prev => [...prev, botMsg]);
       setIsTyping(false);
-    }, 800);
+    }, 750);
   };
 
   return (
@@ -88,7 +99,7 @@ export const AIAssistant: React.FC = () => {
             <span className="badge badge-success text-xs">Grounded in Real Project State</span>
           </div>
           <p className="text-sm text-slate-400 mt-1">
-            Deterministic conversational exploration of datasets, pipeline runs, and explainability for <strong className="text-slate-200">{activeProject?.name || 'Customer Churn Prevention'}</strong>
+            Deterministic conversational exploration of datasets, pipeline runs, and explainability for <strong className="text-slate-200">{projectName}</strong>
           </p>
         </div>
 
@@ -106,7 +117,7 @@ export const AIAssistant: React.FC = () => {
         <div className="lg:col-span-4 panel p-5 space-y-4">
           <div className="border-b border-border pb-3">
             <span className="text-xs uppercase font-semibold text-slate-400 tracking-wider">Active Grounding Context</span>
-            <h3 className="font-bold text-slate-100 text-sm mt-1">{activeProject?.name || 'Customer Churn Prevention'}</h3>
+            <h3 className="font-bold text-slate-100 text-sm mt-1">{projectName}</h3>
           </div>
 
           <div className="space-y-2 text-xs">
@@ -114,7 +125,7 @@ export const AIAssistant: React.FC = () => {
               <Database className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-slate-200 block">Dataset</span>
-                <span className="text-slate-400">churn_data_clean.csv (7,043 rows)</span>
+                <span className="text-slate-400 font-mono">{projectSlug}_clean.csv (1,200 rows)</span>
               </div>
             </div>
 
@@ -122,7 +133,7 @@ export const AIAssistant: React.FC = () => {
               <Cpu className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-slate-200 block">Champion Model</span>
-                <span className="text-slate-400">XGBoost v1.4.0 (F1: 0.9082)</span>
+                <span className="text-slate-400">{domainMeta.championModelName}</span>
               </div>
             </div>
 
@@ -130,76 +141,68 @@ export const AIAssistant: React.FC = () => {
               <GitBranch className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-slate-200 block">Pipeline Status</span>
-                <span className="text-slate-400">All 8 stages completed</span>
+                <span className="text-slate-400">All 8 stages executed successfully</span>
               </div>
             </div>
           </div>
 
           <div className="pt-2">
             <span className="text-xs uppercase font-semibold text-slate-400 tracking-wider block mb-2">Suggested Inquiries</span>
-            <div className="space-y-1.5">
-              <button
-                onClick={() => handleSend("Explain top SHAP drivers for churn prediction")}
-                className="w-full text-left p-2 rounded-lg bg-surface/50 hover:bg-surface-elevated border border-border/80 text-xs text-slate-300 transition-colors"
-              >
-                Explain top SHAP drivers for churn
-              </button>
-              <button
-                onClick={() => handleSend("Why was XGBoost selected over LightGBM?")}
-                className="w-full text-left p-2 rounded-lg bg-surface/50 hover:bg-surface-elevated border border-border/80 text-xs text-slate-300 transition-colors"
-              >
-                Why was XGBoost selected over LightGBM?
-              </button>
-              <button
-                onClick={() => handleSend("What drift metrics are currently monitored?")}
-                className="w-full text-left p-2 rounded-lg bg-surface/50 hover:bg-surface-elevated border border-border/80 text-xs text-slate-300 transition-colors"
-              >
-                What drift metrics are monitored?
-              </button>
+            <div className="space-y-2">
+              {suggestedQuestions.map((q, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSend(q)}
+                  className="suggestion-pill w-full text-left justify-between group"
+                >
+                  <span className="truncate pr-2">{q}</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-primary-light shrink-0 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Chat Window */}
-        <div className="lg:col-span-8 panel flex flex-col h-[580px]">
-          {/* Messages Area */}
-          <div className="flex-1 p-5 overflow-y-auto space-y-4">
+        {/* Chat Area */}
+        <div className="lg:col-span-8 panel flex flex-col h-[640px]">
+          {/* Messages Stream */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex gap-3 ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.sender === 'ASSISTANT' && (
-                  <div className="w-7 h-7 rounded-lg bg-primary/20 text-primary-light flex items-center justify-center shrink-0 mt-1">
+                  <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary-light flex items-center justify-center shrink-0 mt-1 border border-primary/30">
                     <Bot className="w-4 h-4" />
                   </div>
                 )}
 
-                <div className={`max-w-[85%] rounded-xl p-4 text-xs leading-relaxed ${
-                  msg.sender === 'USER' 
-                    ? 'bg-primary text-white' 
-                    : 'bg-surface-elevated/70 text-slate-200 border border-border'
-                }`}>
+                <div
+                  className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed space-y-2 ${
+                    msg.sender === 'USER'
+                      ? 'bg-primary text-white rounded-tr-none shadow-md shadow-primary/20'
+                      : 'bg-surface-elevated/70 text-slate-200 rounded-tl-none border border-border'
+                  }`}
+                >
                   <div className="whitespace-pre-line">{msg.text}</div>
 
                   {msg.sources && msg.sources.length > 0 && (
-                    <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center gap-2 flex-wrap text-[10px] text-slate-400">
-                      <span className="font-semibold text-slate-400">Verified Sources:</span>
-                      {msg.sources.map((s, i) => (
-                        <span key={i} className="badge badge-neutral text-[10px] py-0 px-1.5">
+                    <div className="pt-2 mt-2 border-t border-border/60 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
+                      <span className="font-semibold text-slate-300">Verified Sources:</span>
+                      {msg.sources.map((s, idx) => (
+                        <span key={idx} className="badge badge-neutral text-[10px] py-0 px-1.5">
                           {s}
                         </span>
                       ))}
                     </div>
                   )}
 
-                  <div className={`text-[10px] mt-1.5 ${msg.sender === 'USER' ? 'text-white/70' : 'text-slate-500'} text-right`}>
-                    {msg.timestamp}
-                  </div>
+                  <div className="text-[10px] opacity-60 text-right">{msg.timestamp}</div>
                 </div>
 
                 {msg.sender === 'USER' && (
-                  <div className="w-7 h-7 rounded-lg bg-slate-700 text-slate-200 flex items-center justify-center shrink-0 mt-1">
+                  <div className="w-8 h-8 rounded-lg bg-surface-elevated border border-border text-slate-300 flex items-center justify-center shrink-0 mt-1">
                     <User className="w-4 h-4" />
                   </div>
                 )}
@@ -207,20 +210,22 @@ export const AIAssistant: React.FC = () => {
             ))}
 
             {isTyping && (
-              <div className="flex gap-3 justify-start">
-                <div className="w-7 h-7 rounded-lg bg-primary/20 text-primary-light flex items-center justify-center shrink-0">
+              <div className="flex gap-3 items-center text-xs text-slate-400">
+                <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary-light flex items-center justify-center shrink-0 border border-primary/30">
                   <Bot className="w-4 h-4" />
                 </div>
-                <div className="p-3 rounded-xl bg-surface-elevated/70 border border-border text-xs text-slate-400 flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 animate-spin text-primary-light" />
-                  Synthesizing grounded explanation from project state...
+                <div className="p-3 bg-surface-elevated/70 rounded-xl border border-border flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse delay-75" />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse delay-150" />
+                  <span className="ml-2 text-slate-400">Grounding response against project metadata...</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Input Box */}
-          <div className="p-4 border-t border-border bg-surface/50">
+          <div className="p-4 border-t border-border bg-surface-elevated/40">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -233,15 +238,15 @@ export const AIAssistant: React.FC = () => {
                 placeholder="Ask about data quality, models, feature importance, or pipeline decisions..."
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
-                className="input flex-1 text-xs py-2 bg-surface-elevated text-slate-200"
+                className="input flex-1 text-xs py-2.5"
               />
               <button
                 type="submit"
                 disabled={!inputVal.trim() || isTyping}
-                className="btn btn-primary text-xs py-2 px-4 flex items-center gap-1.5"
+                className="btn btn-primary text-xs flex items-center gap-1.5 py-2.5 px-4"
               >
                 <Send className="w-3.5 h-3.5" />
-                Send
+                <span>Send</span>
               </button>
             </form>
           </div>

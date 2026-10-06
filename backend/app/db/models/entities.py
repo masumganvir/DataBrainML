@@ -120,12 +120,20 @@ class Project(Base):
     __tablename__ = "projects"
 
     id: str = Column(String(36), primary_key=True, default=_uuid)
+    slug: str = Column(String(255), nullable=True, unique=True, index=True)
     user_id: str = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     organization_id: Optional[str] = Column(String(36), nullable=True, index=True)
     name: str = Column(String(255), nullable=False)
     description: Optional[str] = Column(Text, nullable=True)
+    objective: Optional[str] = Column(Text, nullable=True)
     status: str = Column(String(50), default="active", nullable=False, index=True)
+    visibility: str = Column(String(50), default="private", nullable=False)
+    current_dataset_id: Optional[str] = Column(String(36), nullable=True)
+    current_run_id: Optional[str] = Column(String(36), nullable=True)
+    latest_model_id: Optional[str] = Column(String(36), nullable=True)
+    latest_model_version: Optional[str] = Column(String(50), nullable=True)
     configuration: Optional[dict] = Column(JSON, nullable=True)
+    project_metadata: Optional[dict] = Column("project_metadata", JSON, nullable=True)
     created_at: datetime = Column(DateTime, server_default=func.now(), nullable=False, index=True)
     updated_at: datetime = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
     deleted_at: Optional[datetime] = Column(DateTime, nullable=True)
@@ -139,6 +147,22 @@ class Project(Base):
     notebooks: list[Notebook] = relationship("Notebook", back_populates="project", cascade="all, delete-orphan")
     reports: list[Report] = relationship("Report", back_populates="project", cascade="all, delete-orphan")
     jobs: list[BackgroundJob] = relationship("BackgroundJob", back_populates="project", cascade="all, delete-orphan")
+    prompts: list[ProjectPrompt] = relationship("ProjectPrompt", back_populates="project", cascade="all, delete-orphan")
+
+
+class ProjectPrompt(Base):
+    """Versioned structured prompt records for a project."""
+    __tablename__ = "project_prompts"
+
+    id: str = Column(String(36), primary_key=True, default=_uuid)
+    project_id: str = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    version: int = Column(Integer, default=1, nullable=False)
+    content: str = Column(Text, nullable=False)
+    created_by: str = Column(String(36), nullable=False)
+    created_at: datetime = Column(DateTime, server_default=func.now(), nullable=False)
+    is_active: bool = Column(Boolean, default=True, nullable=False)
+
+    project: Project = relationship("Project", back_populates="prompts")
 
 
 # ================================================================== #
@@ -565,14 +589,19 @@ class ArtifactEntity(Base):
 
     id: str = Column(String(36), primary_key=True, default=_uuid)
     project_id: Optional[str] = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True, index=True)
+    user_id: Optional[str] = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    dataset_id: Optional[str] = Column(String(36), nullable=True, index=True)
+    run_id: Optional[str] = Column(String(36), nullable=True, index=True)
     session_id: Optional[str] = Column(String(36), nullable=True, index=True)
     artifact_type: str = Column(String(50), nullable=False)  # dataset | model | plot | notebook | report | joblib | onnx | json
+    artifact_name: Optional[str] = Column(String(255), nullable=True)
     filename: Optional[str] = Column(String(255), nullable=True, default="")
     storage_provider: str = Column(String(50), default="s3", nullable=False)  # s3 | minio | local
     bucket: str = Column(String(255), default="datawise-artifacts", nullable=False)
     storage_key: Optional[str] = Column(String(1024), nullable=True, default="")
     content_type: str = Column(String(100), default="application/octet-stream", nullable=False)
     size_bytes: int = Column(BigInteger, default=0, nullable=False)
+    version: str = Column(String(50), default="1.0.0", nullable=False)
     checksum: Optional[str] = Column(String(64), nullable=True)
     artifact_metadata: Optional[dict] = Column("metadata", JSON, nullable=True)
     # Legacy fields

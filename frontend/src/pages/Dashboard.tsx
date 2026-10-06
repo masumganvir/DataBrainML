@@ -18,6 +18,7 @@ import {
   FileText,
   FlaskConical,
 } from 'lucide-react'
+
 import { authStore } from '../services/authStore'
 import { branding } from '../config/branding'
 
@@ -347,81 +348,94 @@ export function Dashboard() {
 
       {/* Quick Action Navigation Grid */}
       <div>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '14px' }}>Quick Workspaces</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Quick Workspaces</h3>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            4 active workspaces
+          </span>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-          <Link
-            to="/app/datasets"
-            style={{
-              padding: '20px',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'all 150ms ease',
-            }}
-          >
-            <Database size={24} color="var(--secondary-accent)" style={{ marginBottom: '10px' }} />
-            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Data & Profiling Studio</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+          <Link to="/app/datasets" className="workspace-card">
+            <span className="workspace-card-icon">
+              <Database size={26} color="var(--secondary-accent)" />
+            </span>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Data & Profiling Studio</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '14px' }}>
               Drag-and-drop ingestion, MCAR diagnostics, and correlation matrices.
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--secondary-accent)', fontWeight: 600 }}>
+              <span>6 datasets</span>
+              <ArrowUpRight size={12} />
+            </div>
           </Link>
 
-          <Link
-            to="/app/experiments"
-            style={{
-              padding: '20px',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'all 150ms ease',
-            }}
-          >
-            <FlaskConical size={24} color="var(--primary-light)" style={{ marginBottom: '10px' }} />
-            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>AutoML Experiment Lab</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+          <Link to="/app/experiments" className="workspace-card">
+            <span className="workspace-card-icon">
+              <FlaskConical size={26} color="var(--primary-light)" />
+            </span>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>AutoML Experiment Lab</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '14px' }}>
               Multi-model comparison, Optuna Bayesian HPO, and cross-validation metrics.
             </div>
-          </Link>
-
-          <Link
-            to="/app/assistant"
-            style={{
-              padding: '20px',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'all 150ms ease',
-            }}
-          >
-            <Bot size={24} color="#a855f7" style={{ marginBottom: '10px' }} />
-            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>AI Data Scientist Assistant</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              Ask analytical questions grounded in real dataset & experiment state.
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--primary-light)', fontWeight: 600 }}>
+              <span>12 HPO runs</span>
+              <ArrowUpRight size={12} />
             </div>
           </Link>
 
-          <Link
-            to="/app/reports"
-            style={{
-              padding: '20px',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'all 150ms ease',
-            }}
-          >
-            <FileText size={24} color="var(--success)" style={{ marginBottom: '10px' }} />
-            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Reports & Artifacts Center</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+          <Link to="/app/assistant" className="workspace-card">
+            <span className="workspace-card-icon">
+              <Bot size={26} color="#a855f7" />
+            </span>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>AI Data Scientist Assistant</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '14px' }}>
+              Ask analytical questions grounded in real dataset & experiment state.
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#a855f7', fontWeight: 600 }}>
+              <span>AI-powered context</span>
+              <ArrowUpRight size={12} />
+            </div>
+          </Link>
+
+          <Link to="/app/reports" className="workspace-card">
+            <span className="workspace-card-icon">
+              <FileText size={26} color="var(--success)" />
+            </span>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Reports & Artifacts Center</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '14px' }}>
               Download HTML/PDF executive summaries and Jupyter notebooks.
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--success)', fontWeight: 600 }}>
+              <span>3 reports ready</span>
+              <ArrowUpRight size={12} />
+            </div>
+          </Link>
+
+          <Link to="/app/pipelines" className="workspace-card">
+            <span className="workspace-card-icon">
+              <GitFork size={26} color="var(--warning)" />
+            </span>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Pipeline DAG Visualizer</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '14px' }}>
+              Interactive 8-stage pipeline graph with node inspector and log streams.
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--warning)', fontWeight: 600 }}>
+              <span>Last run: 2m ago</span>
+              <ArrowUpRight size={12} />
+            </div>
+          </Link>
+
+          <Link to="/app/monitoring" className="workspace-card">
+            <span className="workspace-card-icon">
+              <ShieldCheck size={26} color="#ec4899" />
+            </span>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Drift & Monitoring Center</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '14px' }}>
+              KS-stat & PSI drift tracking with live baseline vs ingress comparison.
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#ec4899', fontWeight: 600 }}>
+              <span style={{ color: 'var(--warning)' }}>⚠ 1 drift alert</span>
+              <ArrowUpRight size={12} />
             </div>
           </Link>
         </div>

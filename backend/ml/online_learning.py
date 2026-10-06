@@ -76,8 +76,7 @@ class OnlineLearningEngine:
         """Check if an algorithm instance natively supports incremental partial_fit."""
         if hasattr(model, "partial_fit") and callable(getattr(model, "partial_fit")):
             return True
-        class_name = type(model).__name__
-        return class_name in cls.INCREMENTAL_COMPATIBLE_CLASSES
+            return class_name in cls.INCREMENTAL_COMPATIBLE_CLASSES
 
     @classmethod
     def execute_incremental_update(

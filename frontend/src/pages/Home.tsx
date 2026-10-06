@@ -266,7 +266,7 @@ export default function Home() {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="e.g. Customer Churn Prediction"
+                  placeholder="e.g. Credit Card Fraud Detection, House Price Forecast..."
                   value={newSessionName}
                   onChange={(e) => setNewSessionName(e.target.value)}
                   autoFocus

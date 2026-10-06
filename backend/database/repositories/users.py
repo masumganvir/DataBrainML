@@ -97,3 +97,17 @@ class UserRepository:
             await db.commit()
         except Exception as exc:
             logger.warning(f"Could not update last login for {user_id}: {exc}")
+
+    @classmethod
+    async def update_password(cls, db: AsyncSession, user_id: str, new_password: str) -> bool:
+        """Updates user's password with fresh Argon2id hash in database."""
+        try:
+            hashed = cls.hash_password(new_password)
+            stmt = update(User).where(User.id == user_id).values(password_hash=hashed)
+            await db.execute(stmt)
+            await db.commit()
+            logger.info(f"[UserRepository] Successfully updated password for user {user_id}")
+            return True
+        except Exception as exc:
+            logger.error(f"Could not update password for {user_id}: {exc}")
+            raise

@@ -16,7 +16,7 @@ import {
   Command,
 } from 'lucide-react'
 import { branding } from '../../config/branding'
-import { authStore, DEMO_PROJECTS } from '../../services/authStore'
+import { authStore } from '../../services/authStore'
 import { projectsApi } from '../../services/api'
 import { Project } from '../../types'
 
@@ -145,54 +145,110 @@ export default function TopBar({ onOpenCommandPalette }: TopBarProps) {
                 top: '100%',
                 left: 0,
                 marginTop: '6px',
-                width: '240px',
+                width: '320px',
                 background: 'var(--bg-secondary)',
                 border: '1px solid var(--border-medium)',
                 borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-lg)',
-                padding: '6px',
-                zIndex: 50,
+                boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)',
+                padding: '8px',
+                zIndex: 100,
               }}
             >
-              <div style={{ padding: '6px 10px', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+              <div style={{ padding: '6px 10px', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
                 ACTIVE PROJECTS
               </div>
-              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
-                {(dbProjects.length > 0 ? dbProjects : DEMO_PROJECTS).slice(0, 15).map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => handleSelectProject(p)}
-                    style={{
-                      padding: '8px 10px',
-                      borderRadius: 'var(--radius-sm)',
-                      fontSize: '0.85rem',
-                      cursor: 'pointer',
-                      background: p.id === currentProject?.id ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-                      color: p.id === currentProject?.id ? 'var(--primary-light)' : 'var(--text-secondary)',
-                      fontWeight: p.id === currentProject?.id ? 600 : 400,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {p.name}
+              <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
+                {dbProjects.length === 0 ? (
+                  <div style={{ padding: '16px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    No projects found.
+                    <div style={{ marginTop: '8px' }}>
+                      <Link
+                        to="/projects/new"
+                        onClick={() => setIsProjectDropdownOpen(false)}
+                        style={{ color: '#818cf8', fontWeight: 600, textDecoration: 'none' }}
+                      >
+                        + Create your first project
+                      </Link>
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  dbProjects.slice(0, 15).map((p: any) => (
+                    <div
+                      key={p.id}
+                      onClick={() => handleSelectProject(p)}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        background: p.id === currentProject?.id ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                        border: p.id === currentProject?.id ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid transparent',
+                        marginBottom: '4px',
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span
+                          style={{
+                            fontWeight: p.id === currentProject?.id ? 700 : 500,
+                            color: p.id === currentProject?.id ? 'var(--primary-light)' : 'var(--text-primary)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            maxWidth: '190px',
+                          }}
+                        >
+                          {p.name}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '0.65rem',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: p.status === 'completed' ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.15)',
+                            color: p.status === 'completed' ? '#34d399' : '#818cf8',
+                            textTransform: 'uppercase',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {p.status || 'Active'}
+                        </span>
+                      </div>
+                      {p.configuration?.dataset_name && (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                          Dataset: {p.configuration.dataset_name}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
               <div style={{ borderTop: '1px solid var(--border-subtle)', margin: '6px 0' }} />
-              <Link
-                to="/app/projects"
-                onClick={() => setIsProjectDropdownOpen(false)}
-                style={{
-                  display: 'block',
-                  padding: '6px 10px',
-                  fontSize: '0.8rem',
-                  color: 'var(--primary-light)',
-                  textDecoration: 'none',
-                }}
-              >
-                + Manage All Projects
-              </Link>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px' }}>
+                <Link
+                  to="/projects/new"
+                  onClick={() => setIsProjectDropdownOpen(false)}
+                  style={{
+                    fontSize: '0.8rem',
+                    color: 'var(--primary-light)',
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                  }}
+                >
+                  + New Project
+                </Link>
+                <Link
+                  to="/projects"
+                  onClick={() => setIsProjectDropdownOpen(false)}
+                  style={{
+                    fontSize: '0.8rem',
+                    color: 'var(--text-muted)',
+                    textDecoration: 'none',
+                  }}
+                >
+                  All Projects &rarr;
+                </Link>
+              </div>
             </div>
           )}
         </div>

@@ -83,7 +83,7 @@ export const AlertCenter: React.FC = () => {
             </span>
           </div>
           <p className="text-sm text-slate-400 mt-1">
-            System, model, and infrastructure alerts for <strong className="text-slate-200">{activeProject?.name || 'Customer Churn Prevention'}</strong>
+            System, model, and infrastructure alerts for <strong className="text-slate-200">{activeProject?.name || 'Active Project'}</strong>
           </p>
         </div>
 

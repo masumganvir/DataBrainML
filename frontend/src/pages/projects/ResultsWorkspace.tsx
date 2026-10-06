@@ -89,7 +89,7 @@ export function ResultsWorkspace() {
     )
   }
 
-  const projectName = project?.name || 'Customer Churn Predictor'
+  const projectName = project?.name || 'Active Project'
   const runDisplay = runId
     ? runId.length > 8
       ? `Run #${runId.slice(0, 4).toUpperCase()}`

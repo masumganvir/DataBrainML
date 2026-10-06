@@ -341,7 +341,7 @@ export const projectsApi = {
   get: (projectId: string): Promise<any> =>
     apiClient.get(`/projects/${projectId}`).then((r) => r.data),
 
-  create: (data: { name: string; description?: string; prompt?: string; configuration?: any }): Promise<any> =>
+  create: (data: { name: string; description?: string; objective?: string; prompt?: string; configuration?: any }): Promise<any> =>
     apiClient.post('/projects', data).then((r) => r.data),
 
   update: (projectId: string, data: any): Promise<any> =>
@@ -405,6 +405,33 @@ export const projectsApi = {
   getEDA: (projectId: string, runId?: string): Promise<any> =>
     apiClient.get(`/projects/${projectId}/eda`, { params: { run_id: runId } }).then((r) => r.data),
 
+
+  proposePlan: (projectId: string, data?: { prompt?: string; custom_name?: string }): Promise<any> =>
+    apiClient.post(`/projects/${projectId}/plan/propose`, data || {}).then((r) => r.data),
+
+  approvePlan: (projectId: string, data: any): Promise<any> =>
+    apiClient.post(`/projects/${projectId}/plan/approve`, data).then((r) => r.data),
+
+  regeneratePlan: (projectId: string, data?: { prompt?: string; custom_name?: string }): Promise<any> =>
+    apiClient.post(`/projects/${projectId}/plan/regenerate`, data || {}).then((r) => r.data),
+
+  clone: (projectId: string): Promise<any> =>
+    apiClient.post(`/projects/${projectId}/clone`).then((r) => r.data),
+
+  compareRuns: (projectId: string): Promise<any> =>
+    apiClient.get(`/projects/${projectId}/runs/compare`).then((r) => r.data),
+
+  getPrompts: (projectId: string): Promise<any[]> =>
+    apiClient.get(`/projects/${projectId}/prompts`).then((r) => r.data),
+
+  addPrompt: (projectId: string, content: string): Promise<any> =>
+    apiClient.post(`/projects/${projectId}/prompts`, { content }).then((r) => r.data),
+
+  getImprovements: (): Promise<any> =>
+    apiClient.get('/projects/system/improvements').then((r) => r.data),
+
+  runDiagnostics: (): Promise<any> =>
+    apiClient.post('/projects/system/diagnostics').then((r) => r.data),
 
   createWebSocket: (projectId: string, runId: string): WebSocket => {
     const wsUrl = BASE_URL.replace(/^http/, 'ws');

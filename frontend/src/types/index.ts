@@ -379,16 +379,22 @@ export interface UserProfile {
 export interface Project {
   id: string;
   name: string;
+  slug?: string;
   description: string;
+  objective?: string;
   created_at: string;
   updated_at: string;
   dataset_count: number;
   experiment_count: number;
   model_count: number;
   active_deployment: boolean;
-  status: 'active' | 'archived' | 'training';
+  status: 'active' | 'archived' | 'training' | string;
   current_champion_model?: string;
+  current_dataset_id?: string;
+  current_run_id?: string;
   tags: string[];
+  configuration?: any;
+  project_metadata?: any;
 }
 
 export interface PipelineNode {

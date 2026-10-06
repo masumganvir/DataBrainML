@@ -99,11 +99,12 @@ class StorageService:
                 except Exception as ex:
                     logger.warning(f"Could not initialize S3 bucket '{b}': {ex}")
 
-    def build_project_key(self, project_id: str, category: str, filename: str) -> str:
-        """Create structured hierarchical storage key."""
+    def build_project_key(self, project_id: str, category: str, filename: str, user_id: str = "default_user") -> str:
+        """Create structured hierarchical storage key adhering to users/{user_id}/projects/{project_id}/{category}/."""
         unique_prefix = uuid.uuid4().hex[:8]
         safe_filename = filename.replace(" ", "_")
-        return f"projects/{project_id}/{category}/{unique_prefix}_{safe_filename}"
+        safe_user = user_id or "default_user"
+        return f"users/{safe_user}/projects/{project_id}/{category}/{unique_prefix}_{safe_filename}"
 
     def upload_file(
         self,
@@ -216,3 +217,6 @@ def get_storage_service() -> StorageService:
     if _storage_singleton is None:
         _storage_singleton = StorageService()
     return _storage_singleton
+
+
+storage_service = get_storage_service()

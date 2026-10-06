@@ -1,195 +1,294 @@
 /**
- * AI DataLab — Authentication, Multi-Tenancy & Project State Store
- * Controls active user session, organization, project context, and theme.
+ * DataWise AI — Authentication Store (Supabase-backed)
+ * Real session management using Supabase Auth.
+ * Replaces the previous demo/mock auth store.
  */
 
-import { UserProfile, Project } from '../types'
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import type { Session, User } from '@supabase/supabase-js';
+import type { Project } from '../types';
+
+// ─────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url?: string;
+  role: string;
+  organization_id?: string;
+  organization_name?: string;
+  mfa_enabled: boolean;
+  created_at: string;
+}
 
 export interface AuthState {
-  user: UserProfile | null
-  token: string | null
-  isAuthenticated: boolean
-  currentProject: Project | null
-  activeProjects: Project[]
-  theme: 'dark' | 'light' | 'system'
-  isOnline: boolean
-  notificationsCount: number
+  user: UserProfile | null;
+  session: Session | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  currentProject: Project | null;
+  theme: 'dark' | 'light' | 'system';
+  isOnline: boolean;
+  notificationsCount: number;
 }
 
-const STORAGE_KEY_AUTH = 'datalab_auth_state'
-const STORAGE_KEY_PROJECT = 'datalab_active_project'
-const STORAGE_KEY_THEME = 'datalab_theme'
+// ─────────────────────────────────────────────────────────────
+// Storage Keys
+// ─────────────────────────────────────────────────────────────
+const STORAGE_KEY_PROJECT = 'datawise_active_project';
+const STORAGE_KEY_THEME   = 'datawise_theme';
 
-// Default Demo User for zero-friction exploration
-const DEFAULT_USER: UserProfile = {
-  id: 'usr_enterprise_01',
-  email: 'lead.scientist@datalab.ai',
-  name: 'Dr. Elena Rostova',
-  role: 'data_scientist',
-  organization_id: 'org_acme_analytics',
-  organization_name: 'Acme Predictive Labs',
-  mfa_enabled: true,
-  created_at: new Date().toISOString(),
-}
+export const DEMO_PROJECTS: Project[] = [];
 
-export const DEMO_PROJECTS: Project[] = [
-  {
-    id: 'proj_churn_prod',
-    name: 'Customer Churn Predictor',
-    description: 'High-throughput customer retention & churn likelihood scoring pipeline with LightGBM.',
-    created_at: '2026-09-15T10:00:00Z',
-    updated_at: '2026-09-30T12:00:00Z',
-    dataset_count: 3,
-    experiment_count: 8,
-    model_count: 4,
-    active_deployment: true,
-    status: 'active',
-    current_champion_model: 'LightGBM Classifier (v2.1.0)',
-    tags: ['Production', 'Customer Analytics', 'High Priority'],
-  },
-  {
-    id: 'proj_fraud_shield',
-    name: 'Realtime Fraud Shield',
-    description: 'Extreme-value preservation and fraud anomaly detection using PyTorch autoencoder and XGBoost.',
-    created_at: '2026-09-20T08:30:00Z',
-    updated_at: '2026-09-29T16:45:00Z',
-    dataset_count: 2,
-    experiment_count: 14,
-    model_count: 6,
-    active_deployment: true,
-    status: 'active',
-    current_champion_model: 'Hybrid PyTorch-XGBoost (v1.4.0)',
-    tags: ['Security', 'Risk', 'Streaming'],
-  },
-  {
-    id: 'proj_ltv_forecasting',
-    name: 'E-Commerce LTV Forecaster',
-    description: 'Customer lifetime value regression using CatBoost and feature interaction cross-terms.',
-    created_at: '2026-09-25T14:15:00Z',
-    updated_at: '2026-09-30T11:20:00Z',
-    dataset_count: 1,
-    experiment_count: 5,
-    model_count: 2,
-    active_deployment: false,
-    status: 'training',
-    current_champion_model: 'CatBoost Regressor (v0.9.1)',
-    tags: ['Revenue', 'Experimental'],
-  },
-]
-
+// ─────────────────────────────────────────────────────────────
+// Auth Store Class
+// ─────────────────────────────────────────────────────────────
 class AuthStore {
-  private state: AuthState
-  private listeners: Set<() => void> = new Set()
+  private state: AuthState;
+  private listeners: Set<() => void> = new Set();
 
   constructor() {
-    const savedToken = localStorage.getItem(STORAGE_KEY_AUTH)
-    const savedProject = localStorage.getItem(STORAGE_KEY_PROJECT)
-    const savedTheme = (localStorage.getItem(STORAGE_KEY_THEME) as 'dark' | 'light' | 'system') || 'dark'
-
-    const activeProject = savedProject
-      ? JSON.parse(savedProject)
-      : DEMO_PROJECTS[0]
-
-    this.state = {
-      user: savedToken ? DEFAULT_USER : DEFAULT_USER, // Pre-authenticated for seamless desktop UX
-      token: savedToken || 'jwt_demo_token_authenticated',
-      isAuthenticated: true,
-      currentProject: activeProject,
-      activeProjects: DEMO_PROJECTS,
-      theme: savedTheme,
-      isOnline: navigator.onLine,
-      notificationsCount: 3,
+    let savedProject: Project | null = null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_PROJECT) || localStorage.getItem('datalab_active_project');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        // Exclude legacy mock churn demo project
+        if (parsed && parsed.name !== 'Customer Churn Intelligence' && parsed.id !== 'proj_default') {
+          savedProject = parsed;
+        } else {
+          localStorage.removeItem('datalab_active_project');
+          localStorage.removeItem(STORAGE_KEY_PROJECT);
+        }
+      }
+    } catch {
+      savedProject = null;
     }
 
-    window.addEventListener('online', () => this.setOnline(true))
-    window.addEventListener('offline', () => this.setOnline(false))
-    this.applyTheme(savedTheme)
+    const savedTheme   = (localStorage.getItem(STORAGE_KEY_THEME) as 'dark' | 'light' | 'system') || 'dark';
+
+    this.state = {
+      user: null,
+      session: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: true,      // true until we check Supabase session
+      currentProject: savedProject,
+      theme: savedTheme,
+      isOnline: navigator.onLine,
+      notificationsCount: 0,
+    };
+
+    this.applyTheme(savedTheme);
+    window.addEventListener('online',  () => this.setOnline(true));
+    window.addEventListener('offline', () => this.setOnline(false));
+
+    // Listen to Supabase auth state changes (handles refresh, logout from another tab, etc.)
+    supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
+      if (session?.user) {
+        const profile = await this.fetchProfile(session.user);
+        this.state = {
+          ...this.state,
+          user: profile,
+          session,
+          token: session.access_token,
+          isAuthenticated: true,
+          isLoading: false,
+        };
+      } else {
+        this.state = {
+          ...this.state,
+          user: null,
+          session: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        };
+      }
+      this.notify();
+    });
   }
 
-  public getState(): AuthState {
-    return this.state
+  // ── Fetch profile from public.users table ──────────────────
+  private async fetchProfile(supabaseUser: User): Promise<UserProfile> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id,email,name,avatar_url,role,organization_id,organization_name,mfa_enabled,created_at')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      if (error || !data) {
+        // Fallback: build minimal profile from auth.user metadata
+        return {
+          id: supabaseUser.id,
+          email: supabaseUser.email ?? '',
+          name: supabaseUser.user_metadata?.name ?? supabaseUser.email?.split('@')[0] ?? 'User',
+          avatar_url: supabaseUser.user_metadata?.avatar_url,
+          role: 'data_scientist',
+          mfa_enabled: false,
+          created_at: supabaseUser.created_at,
+        };
+      }
+      return data as UserProfile;
+    } catch {
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email ?? '',
+        name: supabaseUser.user_metadata?.name ?? 'User',
+        role: 'data_scientist',
+        mfa_enabled: false,
+        created_at: supabaseUser.created_at,
+      };
+    }
   }
+
+  // ── Public API ─────────────────────────────────────────────
+  public getState(): AuthState { return this.state; }
 
   public subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
 
   private notify(): void {
-    this.listeners.forEach((l) => l())
+    this.listeners.forEach((l) => l());
   }
 
-  public login(user: UserProfile, token: string): void {
-    this.state.user = user
-    this.state.token = token
-    this.state.isAuthenticated = true
-    localStorage.setItem(STORAGE_KEY_AUTH, token)
-    this.notify()
+  // signUp — creates Supabase auth user + profile row via trigger
+  public async signUp(email: string, password: string, name: string): Promise<void> {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
+    if (error) throw new Error(error.message);
+    if (!data.session) {
+      // Email confirmation required
+      throw new Error('CHECK_EMAIL');
+    }
   }
 
-  public logout(): void {
-    this.state.user = null
-    this.state.token = null
-    this.state.isAuthenticated = false
-    localStorage.removeItem(STORAGE_KEY_AUTH)
-    this.notify()
+  // signIn — logs in and triggers onAuthStateChange above
+  public async signIn(email: string, password: string): Promise<void> {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
   }
 
+  // signInWithOAuth — Google, GitHub OAuth integration
+  public async signInWithOAuth(provider: 'google' | 'github'): Promise<void> {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin + '/projects',
+      },
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  // signOut
+  public async signOut(): Promise<void> {
+    await supabase.auth.signOut();
+  }
+
+  // ── Utility ────────────────────────────────────────────────
   public setCurrentProject(project: Project): void {
-    this.state.currentProject = project
-    localStorage.setItem(STORAGE_KEY_PROJECT, JSON.stringify(project))
-    this.notify()
+    this.state.currentProject = project;
+    localStorage.setItem(STORAGE_KEY_PROJECT, JSON.stringify(project));
+    this.notify();
+  }
+
+  public clearCurrentProject(): void {
+    this.state.currentProject = null;
+    localStorage.removeItem(STORAGE_KEY_PROJECT);
+    localStorage.removeItem('datalab_active_project');
+    this.notify();
   }
 
   public setTheme(theme: 'dark' | 'light' | 'system'): void {
-    this.state.theme = theme
-    localStorage.setItem(STORAGE_KEY_THEME, theme)
-    this.applyTheme(theme)
-    this.notify()
+    this.state.theme = theme;
+    localStorage.setItem(STORAGE_KEY_THEME, theme);
+    this.applyTheme(theme);
+    this.notify();
   }
 
   private applyTheme(theme: 'dark' | 'light' | 'system'): void {
-    const effectiveTheme =
+    const effective =
       theme === 'system'
-        ? window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light'
-        : theme
-    document.documentElement.setAttribute('data-theme', effectiveTheme)
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        : theme;
+    document.documentElement.setAttribute('data-theme', effective);
   }
 
   public setOnline(isOnline: boolean): void {
-    this.state.isOnline = isOnline
-    this.notify()
+    this.state.isOnline = isOnline;
+    this.notify();
   }
 
   public clearNotifications(): void {
-    this.state.notificationsCount = 0
-    this.notify()
+    this.state.notificationsCount = 0;
+    this.notify();
+  }
+
+  // Legacy compat: direct login used by old Login.tsx code
+  public login(user: UserProfile, token: string): void {
+    this.state.user            = user;
+    this.state.token           = token;
+    this.state.isAuthenticated = true;
+    this.state.isLoading       = false;
+    this.notify();
+  }
+
+  public signInAsDemo(): void {
+    const demoUser: UserProfile = {
+      id: 'usr_demo_workspace',
+      email: 'demo@datawise.ai',
+      name: 'Data Science Engineer',
+      role: 'data_scientist',
+      mfa_enabled: false,
+      created_at: new Date().toISOString(),
+    };
+    this.login(demoUser, 'demo-token');
+  }
+
+  public logout(): void {
+    this.signOut();
   }
 }
 
-export const authStore = new AuthStore()
+export const authStore = new AuthStore();
 
-import { useState, useEffect } from 'react'
-
+// ─────────────────────────────────────────────────────────────
+// React Hook
+// ─────────────────────────────────────────────────────────────
 export function useAuthStore() {
-  const [state, setState] = useState<AuthState>(authStore.getState())
+  const [state, setState] = useState<AuthState>(authStore.getState());
 
   useEffect(() => {
     return authStore.subscribe(() => {
-      setState({ ...authStore.getState() })
-    })
-  }, [])
+      setState({ ...authStore.getState() });
+    });
+  }, []);
 
   return {
     ...state,
     activeProject: state.currentProject,
-    login: (user: UserProfile, token: string) => authStore.login(user, token),
-    logout: () => authStore.logout(),
+    signIn:  (email: string, password: string) => authStore.signIn(email, password),
+    signInAsDemo: () => authStore.signInAsDemo(),
+    signInWithOAuth: (provider: 'google' | 'github') => authStore.signInWithOAuth(provider),
+    signUp:  (email: string, password: string, name: string) => authStore.signUp(email, password, name),
+    signOut: () => authStore.signOut(),
+    // legacy compat
+    login:   (user: UserProfile, token: string) => authStore.login(user, token),
+    logout:  () => authStore.logout(),
     setCurrentProject: (p: Project) => authStore.setCurrentProject(p),
     setTheme: (t: 'dark' | 'light' | 'system') => authStore.setTheme(t),
     setOnline: (o: boolean) => authStore.setOnline(o),
-    clearNotifications: () => authStore.clearNotifications()
-  }
+    clearNotifications: () => authStore.clearNotifications(),
+  };
 }
