@@ -43,8 +43,12 @@ export const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      setError('Access restricted: only @gmail.com email addresses are permitted.');
+      return;
+    }
     if (password !== confirm) { setError('Passwords do not match.'); return; }
-    if (password.length < 6)  { setError('Password must be at least 6 characters.'); return; }
+    if (password.length < 8)  { setError('Password must be at least 8 characters.'); return; }
     setLoading(true);
     setError('');
     try {

@@ -102,6 +102,32 @@ async def init_db() -> None:
         # Local SQLite or custom Postgres — auto-create tables.
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            if not _is_postgres:
+                from sqlalchemy import text
+                # Safe auto-migration for SQLite to guarantee columns exist
+                sqlite_migrations = [
+                    ("projects", "slug", "VARCHAR(150)"),
+                    ("projects", "objective", "TEXT"),
+                    ("projects", "visibility", "VARCHAR(20) DEFAULT 'private'"),
+                    ("projects", "current_dataset_id", "VARCHAR(36)"),
+                    ("projects", "current_run_id", "VARCHAR(36)"),
+                    ("projects", "latest_model_id", "VARCHAR(36)"),
+                    ("projects", "latest_model_version", "VARCHAR(20)"),
+                    ("projects", "project_metadata", "TEXT DEFAULT '{}'"),
+                    ("artifacts", "user_id", "VARCHAR(36)"),
+                    ("artifacts", "run_id", "VARCHAR(36)"),
+                    ("artifacts", "dataset_id", "VARCHAR(36)"),
+                    ("artifacts", "version", "INTEGER DEFAULT 1"),
+                    ("artifacts", "artifact_name", "VARCHAR(255)"),
+                ]
+                for tbl, col, col_def in sqlite_migrations:
+                    try:
+                        res = await conn.execute(text(f"PRAGMA table_info({tbl});"))
+                        existing_cols = {row[1] for row in res.fetchall()}
+                        if existing_cols and col not in existing_cols:
+                            await conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_def};"))
+                    except Exception as e:
+                        logger.debug(f"SQLite migration check {tbl}.{col}: {e}")
         logger.info("Local DB tables created/verified via SQLAlchemy metadata.")
 
 

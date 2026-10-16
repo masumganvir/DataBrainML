@@ -18,9 +18,10 @@ const apiClient: AxiosInstance = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  // 'access_token' is the canonical key used by authStore
   const token =
-    localStorage.getItem('datalab_auth_state') ||
     localStorage.getItem('access_token') ||
+    localStorage.getItem('datalab_auth_state') ||
     localStorage.getItem('token');
   if (token && !config.headers['Authorization']) {
     config.headers['Authorization'] = `Bearer ${token}`;

@@ -9,8 +9,9 @@ import { AppShell } from './components/layout/AppShell';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 // Auth Pages
-import { Login }    from './pages/auth/Login';
-import { Register } from './pages/auth/Register';
+import { Login }        from './pages/auth/Login';
+import { Register }     from './pages/auth/Register';
+import { AuthCallback } from './pages/auth/AuthCallback';
 
 // Workspace Pages
 import { Dashboard }              from './pages/Dashboard';
@@ -63,8 +64,9 @@ export default function App() {
     }>
       <Routes>
         {/* ─── Public Routes ──────────────────────────── */}
-        <Route path="/login"    element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login"         element={<Login />} />
+        <Route path="/register"      element={<Register />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* ─── Protected Top-Level Workbench Routes ────── */}
         <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>

@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
 
+const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
 export const SettingsView: React.FC = () => {
   const { user, token } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'security' | 'sessions' | 'api' | 'profile'>('security');
@@ -57,7 +59,7 @@ export const SettingsView: React.FC = () => {
     setAuditReceipt(null);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/auth/send-otp', {
+      const res = await fetch(`${API_BASE}/api/auth/send-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +77,7 @@ export const SettingsView: React.FC = () => {
         setCountdown(60);
         if (data.otp_preview) {
           setDevOtpHint(data.otp_preview);
-          setOtpCode(data.otp_preview); // Auto-fill for convenience while keeping input editable
+          setOtpCode(data.otp_preview);
         }
         setStatusMessage({
           type: 'success',
@@ -88,15 +90,9 @@ export const SettingsView: React.FC = () => {
         });
       }
     } catch (err: any) {
-      // Fallback simulation in case backend is offline
-      setOtpSent(true);
-      setCountdown(60);
-      const generated = '784920';
-      setDevOtpHint(generated);
-      setOtpCode(generated);
       setStatusMessage({
-        type: 'success',
-        text: `6-digit security code generated and sent to ${otpChannel === 'email' ? emailAddress : phoneNumber}.`
+        type: 'error',
+        text: 'Network error: could not connect to authentication server.'
       });
     } finally {
       setIsSendingOtp(false);
@@ -126,7 +122,7 @@ export const SettingsView: React.FC = () => {
     setIsVerifying(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/auth/verify-otp-and-update-password', {
+      const res = await fetch(`${API_BASE}/api/auth/verify-otp-and-update-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

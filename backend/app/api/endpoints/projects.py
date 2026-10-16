@@ -28,6 +28,7 @@ import zipfile
 from fastapi import (
     APIRouter,
     BackgroundTasks,
+    Body,
     Depends,
     File,
     HTTPException,
@@ -966,6 +967,7 @@ async def upload_dataset(
 
     return {
         "status": "success",
+        "dataset_id": dataset_id,
         "duplicate": False,
         "file_hash": checksum,
         "checksum": checksum,
@@ -983,7 +985,7 @@ async def upload_dataset(
 @router.post("/{project_id}/plan/propose", summary="Generate AI Project Plan proposal")
 async def propose_project_plan(
     project_id: str,
-    payload: PlanProposalRequest,
+    payload: Optional[PlanProposalRequest] = Body(default=None),
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -992,6 +994,8 @@ async def propose_project_plan(
     Produces a proposed Project Blueprint with candidate target, ML task, metrics,
     and structured prompt without automatically finalizing it.
     """
+    if payload is None:
+        payload = PlanProposalRequest()
     p = None
     try:
         q = await db.execute(select(Project).where((Project.id == project_id) | (Project.slug == project_id)))
@@ -1022,7 +1026,7 @@ async def propose_project_plan(
 @router.post("/{project_id}/plan/approve", summary="Human approval of AI project plan")
 async def approve_project_plan(
     project_id: str,
-    payload: PlanApprovalRequest,
+    payload: Optional[PlanApprovalRequest] = Body(default=None),
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1030,6 +1034,8 @@ async def approve_project_plan(
     Applies approved project definition, updates database record,
     creates a versioned ProjectPrompt, and triggers the AutoML pipeline.
     """
+    if payload is None:
+        payload = PlanApprovalRequest()
     p = None
     try:
         q = await db.execute(select(Project).where((Project.id == project_id) | (Project.slug == project_id)))
@@ -1118,12 +1124,17 @@ async def approve_project_plan(
     run_info = None
     has_dataset = bool(_RUN_STATES.get(actual_id, {}).get("dataset"))
     if payload.start_analysis and has_dataset:
-        run_info = await run_project_analysis(
-            project_id=actual_id,
-            payload=RunAnalysisRequest(prompt=prompt or ""),
-            user=user,
-            db=db,
-        )
+        try:
+            run_info = await start_analysis_run(
+                project_id=actual_id,
+                payload=RunAnalysisRequest(prompt=prompt or ""),
+                background_tasks=BackgroundTasks(),
+                user=user,
+                db=db,
+            )
+        except Exception as exc:
+            logger.warning(f"Could not auto-start analysis during plan approval: {exc}")
+            run_info = None
 
     return {
         "status": "approved",
@@ -1992,8 +2003,8 @@ print("Prediction output:", prediction[0])
 @router.post("/{project_id}/runs", summary="Start AI Analysis Run (Asynchronous)")
 async def start_analysis_run(
     project_id: str,
-    payload: RunAnalysisRequest,
-    background_tasks: BackgroundTasks,
+    payload: Optional[RunAnalysisRequest] = Body(default=None),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -2001,6 +2012,8 @@ async def start_analysis_run(
     Spawns an asynchronous LangGraph agent workflow run.
     Returns immediately with run_id and job_id.
     """
+    if payload is None:
+        payload = RunAnalysisRequest()
     if user:
         q = await db.execute(select(Project).where(Project.id == project_id))
         p = q.scalar_one_or_none()
@@ -2348,6 +2361,7 @@ async def download_run_artifact(
     file_mapping = {
         "notebook": ([out_dir / "notebook" / "complete_ml_pipeline.ipynb", out_dir / "project_analysis.ipynb"], "complete_ml_pipeline.ipynb", "application/x-ipynb+json"),
         "html": ([out_dir / "reports" / "final_report.html", out_dir / "final_report.html"], "final_report.html", "text/html"),
+        "report-html": ([out_dir / "reports" / "final_report.html", out_dir / "final_report.html"], "final_report.html", "text/html"),
         "profile": ([out_dir / "profiling" / "ydata_profile.html", out_dir / "ydata_profile.html"], "ydata_profile.html", "text/html"),
         "ydata": ([out_dir / "profiling" / "ydata_profile.html", out_dir / "ydata_profile.html"], "ydata_profile.html", "text/html"),
         "pdf": ([out_dir / "reports" / "final_report.pdf", out_dir / "final_report.pdf"], "final_report.pdf", "application/pdf"),
@@ -2358,6 +2372,7 @@ async def download_run_artifact(
         "eda_report": ([out_dir / "reports" / "EDA_Report.html", out_dir / "visualizations" / "EDA_Report.html", out_dir / "EDA_Report.html"], "EDA_Report.html", "text/html"),
         "eda_summary": ([out_dir / "eda_summary.json", out_dir / "reports" / "eda_summary.json"], "eda_summary.json", "application/json"),
         "bundle": ([out_dir / "project_results.zip"], "project_results.zip", "application/zip"),
+        "zip": ([out_dir / "project_results.zip"], "project_results.zip", "application/zip"),
     }
 
     if artifact_type not in file_mapping:

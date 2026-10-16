@@ -51,13 +51,13 @@ class UserRepository:
         cls,
         db: AsyncSession,
         email: str,
-        password: str,
+        password: Optional[str],
         name: str = "",
         role: str = "data_scientist",
     ) -> User:
-        """Creates a new user with secure password hash."""
+        """Creates a new user with secure password hash (or no hash for OAuth users)."""
         user_id = f"usr_{uuid.uuid4().hex[:12]}"
-        hashed = cls.hash_password(password)
+        hashed = cls.hash_password(password) if password else "oauth_no_password"
         user = User(
             id=user_id,
             email=email.strip().lower(),

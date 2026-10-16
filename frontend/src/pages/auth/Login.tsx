@@ -5,8 +5,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Cpu } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Cpu, X, Key, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
+
+const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 // ── Animated particle canvas background ────────────────────────
 const ParticleBackground: React.FC = () => {
@@ -116,9 +118,39 @@ export const Login: React.FC = () => {
   const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null);
   const [mounted,   setMounted]   = useState(false);
 
+  // Forgot password modal state
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [forgotStep, setForgotStep] = useState<'request' | 'reset' | 'success'>('request');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState('');
+  const [forgotNotice, setForgotNotice] = useState('');
+
   useEffect(() => {
     setTimeout(() => setMounted(true), 50);
   }, []);
+
+  // Inspect URL query params for errors redirected from backend OAuth
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const errCode = params.get('error');
+    if (errCode) {
+      const errorMap: Record<string, string> = {
+        gmail_only: 'Access restricted: DataWise AI only permits @gmail.com accounts.',
+        google_cancelled: 'Google sign-in was cancelled or denied.',
+        github_cancelled: 'GitHub sign-in was cancelled or denied.',
+        oauth_not_configured: 'OAuth is not configured on this server. Contact administrator or use your @gmail.com account.',
+        google_token_failed: 'Failed to exchange authorization token with Google.',
+        google_userinfo_failed: 'Failed to retrieve profile information from Google.',
+        github_token_failed: 'Failed to exchange authorization token with GitHub.',
+        github_token_missing: 'No access token returned by GitHub.',
+        oauth_token_missing: 'OAuth callback did not return a valid authentication token.',
+      };
+      setError(errorMap[errCode] || `Sign-in notice: ${errCode}`);
+    }
+  }, [location.search]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -128,8 +160,73 @@ export const Login: React.FC = () => {
     }
   }, [isAuthenticated, navigate, location]);
 
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.toLowerCase().endsWith('@gmail.com')) {
+      setForgotError('Only @gmail.com email addresses are permitted.');
+      return;
+    }
+    setForgotLoading(true);
+    setForgotError('');
+    setForgotNotice('');
+    try {
+      const resp = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        throw new Error(data.detail || 'Failed to dispatch reset request.');
+      }
+      setForgotNotice(data.message || 'If an account exists, a reset code has been sent.');
+      if (data.reset_token_preview) {
+        setResetToken(data.reset_token_preview);
+      }
+      setForgotStep('reset');
+    } catch (err: any) {
+      setForgotError(err.message || 'Unable to process reset request.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleApplyReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 8) {
+      setForgotError('New password must be at least 8 characters.');
+      return;
+    }
+    if (!resetToken.trim()) {
+      setForgotError('Reset token or code is required.');
+      return;
+    }
+    setForgotLoading(true);
+    setForgotError('');
+    try {
+      const resp = await fetch(`${API_BASE}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken.trim(), new_password: newPassword }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        throw new Error(data.detail || 'Password reset failed.');
+      }
+      setForgotStep('success');
+    } catch (err: any) {
+      setForgotError(err.message || 'Password reset failed. Token may be expired.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      setError('Access restricted: only @gmail.com email addresses are permitted.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -423,11 +520,18 @@ export const Login: React.FC = () => {
                 </label>
                 <button
                   type="button"
+                  id="forgot-password-trigger"
                   style={{
                     background: 'none', border: 'none', padding: 0, cursor: 'pointer',
                     fontSize: 11, color: 'var(--primary-light)',
                   }}
-                  onClick={() => {}}
+                  onClick={() => {
+                    setShowForgot(true);
+                    setForgotStep('request');
+                    setForgotError('');
+                    setForgotNotice('');
+                    setForgotEmail(email);
+                  }}
                 >
                   Forgot password?
                 </button>
@@ -596,9 +700,222 @@ export const Login: React.FC = () => {
         }}>
           <span>🔒 TLS 1.3 encrypted</span>
           <span>🛡️ Row-Level Security</span>
-          <span>☁️ Supabase Auth</span>
+          <span>☁️ Argon2id Auth</span>
         </div>
       </div>
+
+      {/* Forgot / Reset Password Modal */}
+      {showForgot && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 50,
+          background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 20,
+        }}>
+          <div style={{
+            background: 'rgba(15,23,42,0.95)',
+            border: '1px solid rgba(99,102,241,0.3)',
+            borderRadius: 16,
+            padding: 28,
+            maxWidth: 420,
+            width: '100%',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)',
+            position: 'relative',
+          }}>
+            <button
+              type="button"
+              onClick={() => setShowForgot(false)}
+              style={{
+                position: 'absolute', top: 16, right: 16,
+                background: 'none', border: 'none', color: 'var(--text-muted)',
+                cursor: 'pointer',
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: 'rgba(99,102,241,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--primary-light)',
+              }}>
+                <Key size={18} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {forgotStep === 'request' && 'Reset your password'}
+                  {forgotStep === 'reset' && 'Set new password'}
+                  {forgotStep === 'success' && 'Password updated'}
+                </h3>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  {forgotStep === 'request' && 'Enter your @gmail.com to receive a reset token'}
+                  {forgotStep === 'reset' && 'Provide your reset token and new secure password'}
+                  {forgotStep === 'success' && 'Your credentials have been securely updated'}
+                </p>
+              </div>
+            </div>
+
+            {forgotError && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 12px', marginBottom: 14,
+                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+                borderRadius: 8, color: '#f87171', fontSize: 12,
+              }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                <span>{forgotError}</span>
+              </div>
+            )}
+
+            {forgotNotice && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 12px', marginBottom: 14,
+                background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)',
+                borderRadius: 8, color: 'var(--primary-light)', fontSize: 12,
+              }}>
+                <CheckCircle size={14} style={{ flexShrink: 0 }} />
+                <span>{forgotNotice}</span>
+              </div>
+            )}
+
+            {forgotStep === 'request' && (
+              <form onSubmit={handleRequestReset}>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                    Email address (@gmail.com only)
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="you@gmail.com"
+                    style={{
+                      width: '100%', padding: '10px 12px',
+                      background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(148,163,184,0.15)',
+                      borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, outline: 'none',
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgot(false)}
+                    style={{
+                      padding: '8px 14px', background: 'transparent',
+                      border: '1px solid rgba(148,163,184,0.2)', borderRadius: 8,
+                      color: 'var(--text-secondary)', fontSize: 12, cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                      border: 'none', borderRadius: 8, color: 'white',
+                      fontSize: 12, fontWeight: 600, cursor: forgotLoading ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {forgotLoading ? 'Sending...' : 'Send reset code'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {forgotStep === 'reset' && (
+              <form onSubmit={handleApplyReset}>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
+                    Reset token / code
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    placeholder="Paste reset token here"
+                    style={{
+                      width: '100%', padding: '8px 12px',
+                      background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(148,163,184,0.15)',
+                      borderRadius: 8, color: 'var(--text-primary)', fontSize: 12, fontFamily: 'var(--font-mono)', outline: 'none',
+                    }}
+                  />
+                </div>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
+                    New password (min 8 chars)
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    style={{
+                      width: '100%', padding: '8px 12px',
+                      background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(148,163,184,0.15)',
+                      borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, outline: 'none',
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setForgotStep('request')}
+                    style={{
+                      padding: '8px 14px', background: 'transparent',
+                      border: '1px solid rgba(148,163,184,0.2)', borderRadius: 8,
+                      color: 'var(--text-secondary)', fontSize: 12, cursor: 'pointer',
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      border: 'none', borderRadius: 8, color: 'white',
+                      fontSize: 12, fontWeight: 600, cursor: forgotLoading ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {forgotLoading ? 'Updating...' : 'Update password'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {forgotStep === 'success' && (
+              <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                <p style={{ color: '#34d399', fontSize: 13, marginBottom: 16 }}>
+                  Your password has been reset with Argon2id encryption. You can now sign in with your new credentials.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowForgot(false)}
+                  style={{
+                    padding: '8px 20px',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                    border: 'none', borderRadius: 8, color: 'white',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  Return to sign in
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes spin  { to { transform: rotate(360deg); } }

@@ -1,13 +1,16 @@
 /**
- * DataWise AI — Authentication Store (Supabase-backed)
- * Real session management using Supabase Auth.
- * Replaces the previous demo/mock auth store.
+ * DataWise AI — Authentication Store (Backend JWT)
+ *
+ * Uses backend FastAPI JWT endpoints for all email/password auth.
+ * OAuth (Google/GitHub) is initiated via backend redirects.
+ * Session token stored in localStorage under 'access_token'.
+ * Supabase SDK no longer used for session management.
  */
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import type { Session, User } from '@supabase/supabase-js';
 import type { Project } from '../types';
+
+const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -23,11 +26,12 @@ export interface UserProfile {
   organization_name?: string;
   mfa_enabled: boolean;
   created_at: string;
+  is_active?: boolean;
 }
 
 export interface AuthState {
   user: UserProfile | null;
-  session: Session | null;
+  session: null;           // kept for API compat
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -40,6 +44,8 @@ export interface AuthState {
 // ─────────────────────────────────────────────────────────────
 // Storage Keys
 // ─────────────────────────────────────────────────────────────
+const STORAGE_KEY_TOKEN   = 'access_token';
+const STORAGE_KEY_USER    = 'datawise_user';
 const STORAGE_KEY_PROJECT = 'datawise_active_project';
 const STORAGE_KEY_THEME   = 'datawise_theme';
 
@@ -53,12 +59,19 @@ class AuthStore {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    // Restore persisted auth
+    const savedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
+    let savedUser: UserProfile | null = null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_USER);
+      if (raw) savedUser = JSON.parse(raw) as UserProfile;
+    } catch { savedUser = null; }
+
     let savedProject: Project | null = null;
     try {
       const raw = localStorage.getItem(STORAGE_KEY_PROJECT) || localStorage.getItem('datalab_active_project');
       if (raw) {
         const parsed = JSON.parse(raw);
-        // Exclude legacy mock churn demo project
         if (parsed && parsed.name !== 'Customer Churn Intelligence' && parsed.id !== 'proj_default') {
           savedProject = parsed;
         } else {
@@ -66,18 +79,16 @@ class AuthStore {
           localStorage.removeItem(STORAGE_KEY_PROJECT);
         }
       }
-    } catch {
-      savedProject = null;
-    }
+    } catch { savedProject = null; }
 
-    const savedTheme   = (localStorage.getItem(STORAGE_KEY_THEME) as 'dark' | 'light' | 'system') || 'dark';
+    const savedTheme = (localStorage.getItem(STORAGE_KEY_THEME) as 'dark' | 'light' | 'system') || 'dark';
 
     this.state = {
-      user: null,
+      user: savedUser,
       session: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: true,      // true until we check Supabase session
+      token: savedToken,
+      isAuthenticated: !!(savedToken && savedUser),
+      isLoading: !!(savedToken && savedUser), // will verify in background if has token
       currentProject: savedProject,
       theme: savedTheme,
       isOnline: navigator.onLine,
@@ -88,64 +99,90 @@ class AuthStore {
     window.addEventListener('online',  () => this.setOnline(true));
     window.addEventListener('offline', () => this.setOnline(false));
 
-    // Listen to Supabase auth state changes (handles refresh, logout from another tab, etc.)
-    supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
-      if (session?.user) {
-        const profile = await this.fetchProfile(session.user);
+    // Handle OAuth callback tokens in URL
+    this._handleCallbackToken();
+
+    // Verify existing token in background
+    if (savedToken && savedUser) {
+      this._verifyToken(savedToken);
+    } else {
+      this.state.isLoading = false;
+    }
+  }
+
+  // ── Handle OAuth callback token from URL ───────────────────
+  private _handleCallbackToken(): void {
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
+    const urlName  = params.get('name');
+    const urlEmail = params.get('email');
+    if (urlToken) {
+      localStorage.setItem(STORAGE_KEY_TOKEN, urlToken);
+      const partialUser: UserProfile = {
+        id: '',
+        email: decodeURIComponent(urlEmail || ''),
+        name: decodeURIComponent(urlName || 'User'),
+        role: 'data_scientist',
+        mfa_enabled: false,
+        created_at: new Date().toISOString(),
+      };
+      this.state.token = urlToken;
+      this.state.user  = partialUser;
+      this.state.isAuthenticated = true;
+      this.state.isLoading = true;
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Fetch full profile
+      this._verifyToken(urlToken);
+    }
+  }
+
+  // ── Verify token and refresh user profile from backend ─────
+  private async _verifyToken(token: string): Promise<void> {
+    try {
+      const resp = await fetch(`${API_BASE}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resp.ok) {
+        const userData = await resp.json();
+        const profile: UserProfile = {
+          id:          userData.id ?? '',
+          email:       userData.email ?? '',
+          name:        userData.name ?? '',
+          role:        userData.role ?? 'data_scientist',
+          mfa_enabled: false,
+          created_at:  userData.created_at ?? new Date().toISOString(),
+          is_active:   userData.is_active,
+        };
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(profile));
         this.state = {
           ...this.state,
           user: profile,
-          session,
-          token: session.access_token,
           isAuthenticated: true,
           isLoading: false,
         };
       } else {
-        this.state = {
-          ...this.state,
-          user: null,
-          session: null,
-          token: null,
-          isAuthenticated: false,
-          isLoading: false,
-        };
+        // Token invalid / expired
+        this._clearSession();
       }
-      this.notify();
-    });
+    } catch {
+      // Network error — keep existing session data but mark not loading
+      this.state.isLoading = false;
+    }
+    this.notify();
   }
 
-  // ── Fetch profile from public.users table ──────────────────
-  private async fetchProfile(supabaseUser: User): Promise<UserProfile> {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id,email,name,avatar_url,role,organization_id,organization_name,mfa_enabled,created_at')
-        .eq('id', supabaseUser.id)
-        .single();
-
-      if (error || !data) {
-        // Fallback: build minimal profile from auth.user metadata
-        return {
-          id: supabaseUser.id,
-          email: supabaseUser.email ?? '',
-          name: supabaseUser.user_metadata?.name ?? supabaseUser.email?.split('@')[0] ?? 'User',
-          avatar_url: supabaseUser.user_metadata?.avatar_url,
-          role: 'data_scientist',
-          mfa_enabled: false,
-          created_at: supabaseUser.created_at,
-        };
-      }
-      return data as UserProfile;
-    } catch {
-      return {
-        id: supabaseUser.id,
-        email: supabaseUser.email ?? '',
-        name: supabaseUser.user_metadata?.name ?? 'User',
-        role: 'data_scientist',
-        mfa_enabled: false,
-        created_at: supabaseUser.created_at,
-      };
-    }
+  private _clearSession(): void {
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_USER);
+    this.state = {
+      ...this.state,
+      user: null,
+      session: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    };
   }
 
   // ── Public API ─────────────────────────────────────────────
@@ -160,40 +197,103 @@ class AuthStore {
     this.listeners.forEach((l) => l());
   }
 
-  // signUp — creates Supabase auth user + profile row via trigger
+  // ── Email/password registration via backend API ────────────
   public async signUp(email: string, password: string, name: string): Promise<void> {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
+    const resp = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name }),
     });
-    if (error) throw new Error(error.message);
-    if (!data.session) {
-      // Email confirmation required
-      throw new Error('CHECK_EMAIL');
+    const data = await resp.json();
+    if (!resp.ok) {
+      throw new Error(data.detail || 'Registration failed.');
     }
+    // Auto-login after registration
+    const { access_token, user } = data;
+    this._applySession(access_token, user);
   }
 
-  // signIn — logs in and triggers onAuthStateChange above
+  // ── Email/password sign-in via backend API ─────────────────
   public async signIn(email: string, password: string): Promise<void> {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(error.message);
-  }
-
-  // signInWithOAuth — Google, GitHub OAuth integration
-  public async signInWithOAuth(provider: 'google' | 'github'): Promise<void> {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: window.location.origin + '/projects',
-      },
+    const resp = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
-    if (error) throw new Error(error.message);
+    const data = await resp.json();
+    if (!resp.ok) {
+      throw new Error(data.detail || 'Incorrect email or password.');
+    }
+    const { access_token, user } = data;
+    this._applySession(access_token, user);
   }
 
-  // signOut
+  private _applySession(token: string, user: any): void {
+    const profile: UserProfile = {
+      id:          user.id ?? '',
+      email:       user.email ?? '',
+      name:        user.name ?? user.email?.split('@')[0] ?? 'User',
+      role:        user.role ?? 'data_scientist',
+      mfa_enabled: false,
+      created_at:  user.created_at ?? new Date().toISOString(),
+      is_active:   user.is_active,
+    };
+    localStorage.setItem(STORAGE_KEY_TOKEN, token);
+    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(profile));
+    this.state = {
+      ...this.state,
+      user: profile,
+      token,
+      isAuthenticated: true,
+      isLoading: false,
+    };
+    this.notify();
+  }
+
+  // ── OAuth — redirect to backend OAuth endpoint ─────────────
+  public async signInWithOAuth(provider: 'google' | 'github'): Promise<void> {
+    window.location.href = `${API_BASE}/api/auth/${provider}`;
+  }
+
+  // ── Sign out ───────────────────────────────────────────────
   public async signOut(): Promise<void> {
-    await supabase.auth.signOut();
+    const token = this.state.token;
+    if (token) {
+      try {
+        await fetch(`${API_BASE}/api/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch { /* best effort */ }
+    }
+    this._clearSession();
+    localStorage.removeItem(STORAGE_KEY_PROJECT);
+    localStorage.removeItem('datalab_active_project');
+    this.state.currentProject = null;
+    this.notify();
+  }
+
+  // ── Demo mode (UI testing only — no real backend auth) ────
+  public signInAsDemo(): void {
+    const demoUser: UserProfile = {
+      id: 'usr_demo_workspace',
+      email: 'demo@datawise.ai',
+      name: 'Data Science Engineer (Demo)',
+      role: 'data_scientist',
+      mfa_enabled: false,
+      created_at: new Date().toISOString(),
+    };
+    // Store demo token so api.ts interceptor picks it up
+    localStorage.setItem(STORAGE_KEY_TOKEN, 'demo-token-no-real-auth');
+    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(demoUser));
+    this.state = {
+      ...this.state,
+      user: demoUser,
+      token: 'demo-token-no-real-auth',
+      isAuthenticated: true,
+      isLoading: false,
+    };
+    this.notify();
   }
 
   // ── Utility ────────────────────────────────────────────────
@@ -235,25 +335,9 @@ class AuthStore {
     this.notify();
   }
 
-  // Legacy compat: direct login used by old Login.tsx code
+  // Legacy compat
   public login(user: UserProfile, token: string): void {
-    this.state.user            = user;
-    this.state.token           = token;
-    this.state.isAuthenticated = true;
-    this.state.isLoading       = false;
-    this.notify();
-  }
-
-  public signInAsDemo(): void {
-    const demoUser: UserProfile = {
-      id: 'usr_demo_workspace',
-      email: 'demo@datawise.ai',
-      name: 'Data Science Engineer',
-      role: 'data_scientist',
-      mfa_enabled: false,
-      created_at: new Date().toISOString(),
-    };
-    this.login(demoUser, 'demo-token');
+    this._applySession(token, user);
   }
 
   public logout(): void {
@@ -287,6 +371,7 @@ export function useAuthStore() {
     login:   (user: UserProfile, token: string) => authStore.login(user, token),
     logout:  () => authStore.logout(),
     setCurrentProject: (p: Project) => authStore.setCurrentProject(p),
+    clearCurrentProject: () => authStore.clearCurrentProject(),
     setTheme: (t: 'dark' | 'light' | 'system') => authStore.setTheme(t),
     setOnline: (o: boolean) => authStore.setOnline(o),
     clearNotifications: () => authStore.clearNotifications(),

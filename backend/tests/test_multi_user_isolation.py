@@ -42,10 +42,28 @@ async def test_password_hashing_and_verification():
 
 @pytest.mark.asyncio
 async def test_auth_registration_and_login_flow(client: AsyncClient):
-    """Test user registration, login, and JWT credential generation."""
-    # 1. Register User A
+    """Test user registration, login, domain restriction, and duplicate rejection."""
+    # 0. Non-gmail domain rejection (HTTP 403)
+    bad_domain_resp = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "hacker@evilcorp.com",
+            "password": "StrongPassword123!",
+            "name": "Intruder",
+        },
+    )
+    assert bad_domain_resp.status_code == 403
+    assert "only @gmail.com email addresses are permitted" in bad_domain_resp.json()["detail"]
+
+    bad_domain_login = await client.post(
+        "/api/auth/login",
+        json={"email": "hacker@evilcorp.com", "password": "StrongPassword123!"},
+    )
+    assert bad_domain_login.status_code == 403
+
+    # 1. Register User A with @gmail.com
     reg_payload = {
-        "email": "alice_test@datalab.ai",
+        "email": "alice_multi_test@gmail.com",
         "password": "StrongPassword123!",
         "name": "Alice Data Scientist",
         "role": "data_scientist",
@@ -54,17 +72,30 @@ async def test_auth_registration_and_login_flow(client: AsyncClient):
     assert reg_resp.status_code == 201
     data = reg_resp.json()
     assert "access_token" in data
-    assert data["user"]["email"] == "alice_test@datalab.ai"
+    assert data["user"]["email"] == "alice_multi_test@gmail.com"
     alice_token = data["access_token"]
 
-    # 2. Duplicate registration should be rejected
+    # 2. Duplicate registration should be rejected (HTTP 400)
     dup_resp = await client.post("/api/auth/register", json=reg_payload)
     assert dup_resp.status_code == 400
+    assert "already exists" in dup_resp.json()["detail"]
+
+    # 2b. Case-insensitive duplicate registration should also be rejected
+    case_dup_resp = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "ALICE_MULTI_TEST@GMAIL.COM",
+            "password": "AnotherPassword123!",
+            "name": "Alice Uppercase",
+        },
+    )
+    assert case_dup_resp.status_code == 400
+    assert "already exists" in case_dup_resp.json()["detail"]
 
     # 3. Login with valid credentials
     login_resp = await client.post(
         "/api/auth/login",
-        json={"email": "alice_test@datalab.ai", "password": "StrongPassword123!"},
+        json={"email": "alice_multi_test@gmail.com", "password": "StrongPassword123!"},
     )
     assert login_resp.status_code == 200
     login_data = login_resp.json()
@@ -73,7 +104,7 @@ async def test_auth_registration_and_login_flow(client: AsyncClient):
     # 4. Login with invalid password -> 401 generic error (Section 42)
     bad_login = await client.post(
         "/api/auth/login",
-        json={"email": "alice_test@datalab.ai", "password": "IncorrectPassword!"},
+        json={"email": "alice_multi_test@gmail.com", "password": "IncorrectPassword!"},
     )
     assert bad_login.status_code == 401
     assert "Incorrect email or password" in bad_login.json()["detail"]
@@ -84,7 +115,7 @@ async def test_auth_registration_and_login_flow(client: AsyncClient):
         headers={"Authorization": f"Bearer {alice_token}"},
     )
     assert me_resp.status_code == 200
-    assert me_resp.json()["email"] == "alice_test@datalab.ai"
+    assert me_resp.json()["email"] == "alice_multi_test@gmail.com"
 
 
 @pytest.mark.asyncio
@@ -99,7 +130,7 @@ async def test_multi_user_project_isolation(client: AsyncClient):
     # 1. Register User A and User B
     reg_a = await client.post(
         "/api/auth/register",
-        json={"email": "usera@enterprise.ai", "password": "PasswordA123!", "name": "User A"},
+        json={"email": "usera_iso@gmail.com", "password": "PasswordA123!", "name": "User A"},
     )
     assert reg_a.status_code == 201
     token_a = reg_a.json()["access_token"]
@@ -107,7 +138,7 @@ async def test_multi_user_project_isolation(client: AsyncClient):
 
     reg_b = await client.post(
         "/api/auth/register",
-        json={"email": "userb@enterprise.ai", "password": "PasswordB123!", "name": "User B"},
+        json={"email": "userb_iso@gmail.com", "password": "PasswordB123!", "name": "User B"},
     )
     assert reg_b.status_code == 201
     token_b = reg_b.json()["access_token"]
@@ -180,14 +211,14 @@ async def test_artifact_download_security(client: AsyncClient):
     # Register User A and User B
     reg_a = await client.post(
         "/api/auth/register",
-        json={"email": "alice_art@enterprise.ai", "password": "PasswordA123!", "name": "Alice"},
+        json={"email": "alice_art@gmail.com", "password": "PasswordA123!", "name": "Alice"},
     )
     token_a = reg_a.json()["access_token"]
     headers_a = {"Authorization": f"Bearer {token_a}"}
 
     reg_b = await client.post(
         "/api/auth/register",
-        json={"email": "bob_art@enterprise.ai", "password": "PasswordB123!", "name": "Bob"},
+        json={"email": "bob_art@gmail.com", "password": "PasswordB123!", "name": "Bob"},
     )
     token_b = reg_b.json()["access_token"]
     headers_b = {"Authorization": f"Bearer {token_b}"}
